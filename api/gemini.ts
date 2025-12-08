@@ -10,7 +10,7 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { prompt, history, systemInstruction, enableSearch } = await req.json();
+    const { prompt, history, systemInstruction } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
