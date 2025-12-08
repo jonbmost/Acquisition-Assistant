@@ -12,6 +12,9 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ documents, onAddDocument, onRemoveDocument }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Filter to show only user-uploaded documents (not repository documents)
+  const userDocuments = documents.filter(doc => !doc.isFromRepo);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       Array.from(e.target.files).forEach(file => {
@@ -25,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ documents, onAddDocument, onRemoveDoc
 
   return (
     <aside className="w-64 bg-gray-800/50 border-r border-gray-700 flex flex-col p-4 shrink-0">
-      <h2 className="text-lg font-semibold text-gray-200 mb-4">Knowledge Base</h2>
+      <h2 className="text-lg font-semibold text-gray-200 mb-4">My Documents</h2>
       <input
         type="file"
         ref={fileInputRef}
@@ -43,31 +46,26 @@ const Sidebar: React.FC<SidebarProps> = ({ documents, onAddDocument, onRemoveDoc
         Add Documents
       </button>
       <div className="flex-1 overflow-y-auto space-y-2 -mr-2 pr-2">
-        {documents.length === 0 && (
+        {userDocuments.length === 0 && (
           <p className="text-sm text-gray-500 text-center mt-4">
             Upload documents to provide context to the assistant.
           </p>
         )}
-        {documents.map(doc => (
+        {userDocuments.map(doc => (
           <div key={doc.id} className="bg-gray-700 rounded-lg p-3 flex items-center justify-between group">
             <div className="flex items-center gap-3 overflow-hidden">
               <DocumentIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <div className="flex flex-col overflow-hidden">
                 <span className="text-sm text-gray-300 truncate" title={doc.name}>{doc.name}</span>
-                {doc.isFromRepo && (
-                  <span className="text-xs text-cyan-400">Repository</span>
-                )}
               </div>
             </div>
-            {!doc.isFromRepo && (
-              <button 
-                onClick={() => onRemoveDocument(doc.id)}
-                className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                aria-label={`Remove ${doc.name}`}
-              >
-                <TrashIcon className="h-5 w-5" />
-              </button>
-            )}
+            <button 
+              onClick={() => onRemoveDocument(doc.id)}
+              className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              aria-label={`Remove ${doc.name}`}
+            >
+              <TrashIcon className="h-5 w-5" />
+            </button>
           </div>
         ))}
       </div>
