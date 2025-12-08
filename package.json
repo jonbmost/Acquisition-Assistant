@@ -1,0 +1,20 @@
+{
+  "name": "acquisition-assistant",
+  "version": "1.0.0",
+  "description": "An intelligent procurement assistant to support federal acquisition teams in planning and executing agile, modular, and FAR-compliant acquisitions.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "acquisition",
+    "procurement",
+    "federal",
+    "agile",
+    "FAR"
+  ],
+  "author": "",
+  "license": "ISC"
+}
