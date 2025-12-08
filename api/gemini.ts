@@ -22,18 +22,21 @@ export default async function handler(req: Request) {
 
     const ai = new GoogleGenerativeAI(apiKey);
     
-    // Configure model - use stable version for now
+    // Use stable Gemini 1.5 Flash model for reliability
     const modelConfig: any = {
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-1.5-flash',
       systemInstruction: systemInstruction,
     };
 
-    // Add Google Search tool if enabled (Gemini 2.0 feature)
+    // Google Search grounding is experimental - disabled for now
+    // Will re-enable when stable
+    /*
     if (enableSearch) {
       modelConfig.tools = [{
         googleSearch: {}
       }];
     }
+    */
 
     const model = ai.getGenerativeModel(modelConfig);
 
