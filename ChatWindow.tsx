@@ -130,7 +130,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
             prompt: finalPrompt,
             history: history,
             systemInstruction: SYSTEM_INSTRUCTION,
-            enableSearch: true, // Enable Google Search grounding
           }),
         });
 
