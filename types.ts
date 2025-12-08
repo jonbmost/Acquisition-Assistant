@@ -21,4 +21,5 @@ export interface KnowledgeDocument {
   id: string;
   name: string;
   content: string;
+  isFromRepo?: boolean; // Flag to indicate if document is from repository
 }

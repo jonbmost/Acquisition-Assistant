@@ -5,34 +5,57 @@ import ChatWindow from './ChatWindow';
 import Sidebar from './Sidebar';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
+import { loadRepositoryKnowledgeBase } from './knowledgeBaseLoader';
 
 const KNOWLEDGE_BASE_STORAGE_KEY = 'ait-knowledge-base';
 
 const App: React.FC = () => {
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeDocument[]>([]);
+  const [isLoadingRepo, setIsLoadingRepo] = useState(true);
 
-  // Load knowledge base from localStorage on initial render
+  // Load knowledge base from repository and localStorage on initial render
   useEffect(() => {
-    try {
-      const storedDocs = localStorage.getItem(KNOWLEDGE_BASE_STORAGE_KEY);
-      if (storedDocs) {
-        setKnowledgeBase(JSON.parse(storedDocs));
+    const loadKnowledgeBase = async () => {
+      try {
+        // Load repository documents first
+        const repoDocs = await loadRepositoryKnowledgeBase();
+        
+        // Load user-uploaded documents from localStorage
+        const storedDocs = localStorage.getItem(KNOWLEDGE_BASE_STORAGE_KEY);
+        const userDocs = storedDocs ? JSON.parse(storedDocs) : [];
+        
+        // Combine both, with repo docs first
+        setKnowledgeBase([...repoDocs, ...userDocs]);
+      } catch (error) {
+        console.error("Failed to load knowledge base:", error);
+        // Try to at least load localStorage docs
+        try {
+          const storedDocs = localStorage.getItem(KNOWLEDGE_BASE_STORAGE_KEY);
+          if (storedDocs) {
+            setKnowledgeBase(JSON.parse(storedDocs));
+          }
+        } catch (e) {
+          localStorage.removeItem(KNOWLEDGE_BASE_STORAGE_KEY);
+        }
+      } finally {
+        setIsLoadingRepo(false);
       }
-    } catch (error) {
-      console.error("Failed to load knowledge base from localStorage:", error);
-      // If parsing fails, clear the corrupted data
-      localStorage.removeItem(KNOWLEDGE_BASE_STORAGE_KEY);
-    }
+    };
+
+    loadKnowledgeBase();
   }, []);
 
-  // Save knowledge base to localStorage whenever it changes
+  // Save only user-uploaded documents to localStorage (not repo docs)
   useEffect(() => {
-    try {
-      localStorage.setItem(KNOWLEDGE_BASE_STORAGE_KEY, JSON.stringify(knowledgeBase));
-    } catch (error) {
-      console.error("Failed to save knowledge base to localStorage:", error);
+    if (!isLoadingRepo) {
+      try {
+        const userDocs = knowledgeBase.filter(doc => !doc.isFromRepo);
+        localStorage.setItem(KNOWLEDGE_BASE_STORAGE_KEY, JSON.stringify(userDocs));
+      } catch (error) {
+        console.error("Failed to save knowledge base to localStorage:", error);
+      }
     }
-  }, [knowledgeBase]);
+  }, [knowledgeBase, isLoadingRepo]);
 
   const handleAddDocument = async (file: File) => {
     try {
