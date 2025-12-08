@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import type { KnowledgeDocument } from '../types';
+import type { KnowledgeDocument } from './types';
 import { DocumentIcon, PlusIcon, TrashIcon } from './icons';
 
 interface SidebarProps {

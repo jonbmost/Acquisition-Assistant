@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { Message } from '../types';
+import type { Message } from './types';
 import { UserIcon, BotIcon, SourceIcon, DownloadIcon } from './icons';
 
 // Simple markdown-to-JSX parser

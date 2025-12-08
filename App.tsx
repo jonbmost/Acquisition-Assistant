@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
-import ChatWindow from './components/ChatWindow';
-import Sidebar from './components/Sidebar';
+import Header from './Header';
+import ChatWindow from './ChatWindow';
+import Sidebar from './Sidebar';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
 

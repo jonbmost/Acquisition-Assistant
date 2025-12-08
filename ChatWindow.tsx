@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, Chat } from '@google/genai';
-import { SYSTEM_INSTRUCTION, MAX_DOCUMENT_LENGTH } from '../constants';
-import type { Message, GroundingChunk, KnowledgeDocument } from '../types';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { SYSTEM_INSTRUCTION, MAX_DOCUMENT_LENGTH } from './constants';
+import type { Message, GroundingChunk, KnowledgeDocument } from './types';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import { DownloadIcon } from './icons';
@@ -15,7 +15,7 @@ const CHAT_HISTORY_STORAGE_KEY = 'ait-chat-history';
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chat, setChat] = useState<Chat | null>(null);
+  const [chat, setChat] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,25 +43,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     setMessages(loadedMessages);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY!, vertexai: true });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+      if (!apiKey) {
+        console.warn('No API key found. Please set VITE_GEMINI_API_KEY environment variable.');
+      }
+      const ai = new GoogleGenerativeAI(apiKey);
       
-      // Rebuild AI history from our saved messages
-      const chatHistoryForAI = loadedMessages
-        .filter(msg => msg.id !== 'initial-message') // Don't include the welcome message in history
-        .map(msg => ({
-          role: msg.role,
-          parts: [{ text: msg.text }],
-        }));
-
-      const chatInstance = ai.chats.create({
-        model: 'gemini-2.5-flash',
-        history: chatHistoryForAI,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          tools: [{ googleSearch: {} }],
-        },
+      const chatInstance = ai.getGenerativeModel({
+        model: 'gemini-2.0-flash-exp',
+        systemInstruction: SYSTEM_INSTRUCTION,
       });
-      setChat(chatInstance);
+
+      setChat(chatInstance.startChat({
+        history: loadedMessages
+          .filter(msg => msg.id !== 'initial-message')
+          .map(msg => ({
+            role: msg.role === 'model' ? 'model' : 'user',
+            parts: [{ text: msg.text }],
+          })),
+      }));
     } catch (e) {
       console.error(e);
       setError('Failed to initialize the AI assistant. Please check the API key and configuration.');
@@ -123,32 +123,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
 
       const finalPrompt = `${knowledgeBasePrompt}${filePrompt}User Request: ${inputText}`;
 
-      const stream = await chat.sendMessageStream({ message: finalPrompt });
+      const result = await chat.sendMessageStream(finalPrompt);
       let fullResponseText = '';
-      let finalResponse: any = null;
 
-      for await (const chunk of stream) {
-        fullResponseText += chunk.text;
-        finalResponse = chunk;
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        fullResponseText += chunkText;
         setMessages(prev =>
           prev.map(msg =>
             msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
-          )
-        );
-      }
-      
-      const groundingMetadata = finalResponse?.candidates?.[0]?.groundingMetadata;
-      if (groundingMetadata?.groundingChunks?.length > 0) {
-        const sources = groundingMetadata.groundingChunks
-          .filter((chunk: GroundingChunk) => chunk.web?.uri)
-          .map((chunk: GroundingChunk) => ({
-            uri: chunk.web.uri,
-            title: chunk.web.title,
-          }));
-        
-        setMessages(prev =>
-          prev.map(msg =>
-            msg.id === modelMessageId ? { ...msg, sources } : msg
           )
         );
       }
