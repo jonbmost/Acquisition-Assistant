@@ -37,12 +37,10 @@ export const AI_MODELS = {
   gemini: {
     name: 'Google Gemini',
     model: 'gemini-2.0-flash',
-    envKey: 'VITE_GEMINI_API_KEY',
   },
   openai: {
     name: 'OpenAI ChatGPT',
     model: 'gpt-4o',
-    envKey: 'VITE_OPENAI_API_KEY',
   },
 } as const;
 

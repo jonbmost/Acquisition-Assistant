@@ -1,7 +1,5 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
 import { SYSTEM_INSTRUCTION, MAX_DOCUMENT_LENGTH, AI_MODELS, type AIModel } from './constants';
 import type { Message, GroundingChunk, KnowledgeDocument } from './types';
 import ChatMessage from './ChatMessage';
@@ -17,14 +15,12 @@ const MODEL_SELECTION_STORAGE_KEY = 'ait-selected-model';
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chat, setChat] = useState<any | null>(null);
-  const [openai, setOpenai] = useState<OpenAI | null>(null);
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load chat history from localStorage and initialize chat on startup
+  // Load chat history from localStorage on startup
   useEffect(() => {
     let loadedMessages: Message[] = [];
     try {
@@ -57,56 +53,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     setMessages(loadedMessages);
   }, []);
 
-  // Initialize AI models when selection changes
+  // Save model selection when it changes
   useEffect(() => {
-    try {
-      if (selectedModel === 'gemini') {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-        if (!apiKey) {
-          console.warn('No Gemini API key found. Please set VITE_GEMINI_API_KEY environment variable.');
-          setError('Gemini API key not configured. Please add it to your .env file.');
-          return;
-        }
-        const ai = new GoogleGenerativeAI(apiKey);
-        
-        const chatInstance = ai.getGenerativeModel({
-          model: AI_MODELS.gemini.model,
-          systemInstruction: SYSTEM_INSTRUCTION,
-        });
-
-        setChat(chatInstance.startChat({
-          history: messages
-            .filter(msg => msg.id !== 'initial-message')
-            .map(msg => ({
-              role: msg.role === 'model' ? 'model' : 'user',
-              parts: [{ text: msg.text }],
-            })),
-        }));
-        setOpenai(null);
-        setError(null);
-      } else if (selectedModel === 'openai') {
-        const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
-        if (!apiKey) {
-          console.warn('No OpenAI API key found. Please set VITE_OPENAI_API_KEY environment variable.');
-          setError('OpenAI API key not configured. Please add it to your .env file.');
-          return;
-        }
-        const openaiInstance = new OpenAI({
-          apiKey: apiKey,
-          dangerouslyAllowBrowser: true,
-        });
-        setOpenai(openaiInstance);
-        setChat(null);
-        setError(null);
-      }
-
-      // Save model selection
-      localStorage.setItem(MODEL_SELECTION_STORAGE_KEY, selectedModel);
-    } catch (e) {
-      console.error(e);
-      setError(`Failed to initialize ${AI_MODELS[selectedModel].name}. Please check the API key and configuration.`);
-    }
-  }, [selectedModel, messages]);
+    localStorage.setItem(MODEL_SELECTION_STORAGE_KEY, selectedModel);
+  }, [selectedModel]);
 
   // Save chat history to localStorage whenever it changes
   useEffect(() => {
@@ -125,7 +75,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   }, [messages, isLoading]);
 
   const handleSendMessage = useCallback(async (inputText: string, file: File | null) => {
-    if ((!chat && !openai) || isLoading) return;
+    if (isLoading) return;
 
     setIsLoading(true);
     setError(null);
@@ -163,20 +113,56 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
 
       const finalPrompt = `${knowledgeBasePrompt}${filePrompt}User Request: ${inputText}`;
 
-      if (selectedModel === 'gemini' && chat) {
-        const result = await chat.sendMessageStream(finalPrompt);
+      if (selectedModel === 'gemini') {
+        const history = messages
+          .filter(msg => msg.id !== 'initial-message')
+          .map(msg => ({
+            role: msg.role === 'model' ? 'model' : 'user',
+            parts: [{ text: msg.text }],
+          }));
+
+        const response = await fetch('/api/gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: finalPrompt,
+            history: history,
+            systemInstruction: SYSTEM_INSTRUCTION,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get response from Gemini API');
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
         let fullResponseText = '';
 
-        for await (const chunk of result.stream) {
-          const chunkText = chunk.text();
-          fullResponseText += chunkText;
-          setMessages(prev =>
-            prev.map(msg =>
-              msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
-            )
-          );
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim());
+            
+            for (const line of lines) {
+              try {
+                const { text } = JSON.parse(line);
+                fullResponseText += text;
+                setMessages(prev =>
+                  prev.map(msg =>
+                    msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
+                  )
+                );
+              } catch (e) {
+                console.error('Error parsing chunk:', e);
+              }
+            }
+          }
         }
-      } else if (selectedModel === 'openai' && openai) {
+      } else if (selectedModel === 'openai') {
         const openaiMessages = [
           { role: 'system' as const, content: SYSTEM_INSTRUCTION },
           ...messages
@@ -188,21 +174,42 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
           { role: 'user' as const, content: finalPrompt },
         ];
 
-        const stream = await openai.chat.completions.create({
-          model: AI_MODELS.openai.model,
-          messages: openaiMessages,
-          stream: true,
+        const response = await fetch('/api/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: openaiMessages }),
         });
 
+        if (!response.ok) {
+          throw new Error('Failed to get response from OpenAI API');
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
         let fullResponseText = '';
-        for await (const chunk of stream) {
-          const content = chunk.choices[0]?.delta?.content || '';
-          fullResponseText += content;
-          setMessages(prev =>
-            prev.map(msg =>
-              msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
-            )
-          );
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim());
+            
+            for (const line of lines) {
+              try {
+                const { text } = JSON.parse(line);
+                fullResponseText += text;
+                setMessages(prev =>
+                  prev.map(msg =>
+                    msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
+                  )
+                );
+              } catch (e) {
+                console.error('Error parsing chunk:', e);
+              }
+            }
+          }
         }
       }
 
@@ -218,7 +225,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [chat, openai, selectedModel, isLoading, knowledgeBase, messages]);
+  }, [selectedModel, isLoading, knowledgeBase, messages]);
 
   const downloadChatHistory = () => {
     const historyText = messages.map(msg => {

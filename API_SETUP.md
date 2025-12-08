@@ -1,5 +1,9 @@
 # API Setup Guide
 
+## Security Notice
+
+Your API keys are now secured server-side using Vercel serverless functions. They will never be exposed in the browser.
+
 ## Adding Your OpenAI API Key
 
 1. **Get your OpenAI API key:**
@@ -8,13 +12,15 @@
    - Click "Create new secret key"
    - Copy the key (it starts with `sk-`)
 
-2. **Add it to your environment:**
+2. **For Local Development:**
    - Create a `.env` file in the project root (if it doesn't exist)
-   - Add: `VITE_OPENAI_API_KEY=sk-your-key-here`
+   - Add: `OPENAI_API_KEY=sk-your-key-here`
 
-3. **Restart the app:**
-   - Stop the development server (Ctrl+C)
-   - Run `npm run dev` again
+3. **For Vercel Deployment:**
+   - Go to your Vercel project dashboard
+   - Settings → Environment Variables
+   - Add: `OPENAI_API_KEY` with your key
+   - **Important:** Do NOT check "Expose to client" - keep it server-side only
 
 ## Adding Your Gemini API Key
 
@@ -24,16 +30,20 @@
    - Click "Create API Key"
    - Copy the key
 
-2. **Add it to your environment:**
-   - In your `.env` file, add: `VITE_GEMINI_API_KEY=your-key-here`
+2. **For Local Development:**
+   - In your `.env` file, add: `GEMINI_API_KEY=your-key-here`
 
-3. **Restart the app**
+3. **For Vercel Deployment:**
+   - Go to your Vercel project dashboard
+   - Settings → Environment Variables
+   - Add: `GEMINI_API_KEY` with your key
+   - **Important:** Do NOT check "Expose to client" - keep it server-side only
 
 ## Example .env file
 
 ```
-VITE_GEMINI_API_KEY=AIzaSyDyRN90RYtxB9zsjp7_1GP_GfgF1qEQ0nI
-VITE_OPENAI_API_KEY=sk-proj-abc123xyz...
+GEMINI_API_KEY=AIzaSyDyRN90RYtxB9zsjp7_1GP_GfgF1qEQ0nI
+OPENAI_API_KEY=sk-proj-abc123xyz...
 ```
 
 ## Using the Models
@@ -45,8 +55,17 @@ VITE_OPENAI_API_KEY=sk-proj-abc123xyz...
   - **Gemini**: Fast, cost-effective, good for general queries
   - **ChatGPT (GPT-4o)**: More advanced reasoning, better for complex tasks
 
+## Security Features
+
+- ✅ API keys are stored server-side only
+- ✅ Keys never exposed in browser/client code
+- ✅ Requests proxied through Vercel serverless functions
+- ✅ No risk of key theft from browser inspection
+
 ## Notes
 
 - You need at least one API key configured
 - API keys are stored locally in your `.env` file (never commit this file to git)
 - The `.env` file is already in `.gitignore` for security
+- For production, keys are set in Vercel dashboard and kept server-side
+
