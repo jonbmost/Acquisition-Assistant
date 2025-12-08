@@ -77,10 +77,12 @@ export default async function handler(req: Request) {
     });
   } catch (error: any) {
     console.error('Gemini API error:', error);
-    return new Response(JSON.stringify({ 
+    const errorDetails = {
       error: error.message || 'Unknown error',
-      details: error.toString() 
-    }), {
+      type: error.name || 'Error',
+      stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+    };
+    return new Response(JSON.stringify(errorDetails), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

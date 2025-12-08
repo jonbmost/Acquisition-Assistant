@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { SYSTEM_INSTRUCTION, MAX_DOCUMENT_LENGTH, AI_MODELS, type AIModel } from './constants';
 import type { Message, GroundingChunk, KnowledgeDocument } from './types';
 import ChatMessage from './ChatMessage';
