@@ -128,6 +128,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
             prompt: finalPrompt,
             history: history,
             systemInstruction: SYSTEM_INSTRUCTION,
+            enableSearch: true, // Enable Google Search grounding
           }),
         });
 
@@ -138,6 +139,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
         let fullResponseText = '';
+        let collectedSources: { uri: string; title: string }[] = [];
 
         if (reader) {
           while (true) {
@@ -149,11 +151,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
             
             for (const line of lines) {
               try {
-                const { text } = JSON.parse(line);
+                const { text, groundingMetadata } = JSON.parse(line);
                 fullResponseText += text;
+                
+                // Extract sources from grounding metadata
+                if (groundingMetadata?.groundingChunks) {
+                  for (const chunk of groundingMetadata.groundingChunks) {
+                    if (chunk.web) {
+                      const source = {
+                        uri: chunk.web.uri,
+                        title: chunk.web.title || chunk.web.uri,
+                      };
+                      // Avoid duplicates
+                      if (!collectedSources.some(s => s.uri === source.uri)) {
+                        collectedSources.push(source);
+                      }
+                    }
+                  }
+                }
+                
                 setMessages(prev =>
                   prev.map(msg =>
-                    msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
+                    msg.id === modelMessageId ? { 
+                      ...msg, 
+                      text: fullResponseText,
+                      sources: collectedSources.length > 0 ? collectedSources : undefined
+                    } : msg
                   )
                 );
               } catch (e) {
