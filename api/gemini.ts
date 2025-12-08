@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, GoogleSearchRetrieval } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const config = {
   runtime: 'edge',
@@ -22,21 +22,16 @@ export default async function handler(req: Request) {
 
     const ai = new GoogleGenerativeAI(apiKey);
     
-    // Configure model with Google Search grounding if enabled
+    // Configure model - use stable version for now
     const modelConfig: any = {
       model: 'gemini-2.0-flash-exp',
       systemInstruction: systemInstruction,
     };
 
-    // Add Google Search grounding tool
+    // Add Google Search tool if enabled (Gemini 2.0 feature)
     if (enableSearch) {
       modelConfig.tools = [{
-        googleSearchRetrieval: {
-          dynamicRetrievalConfig: {
-            mode: 'MODE_DYNAMIC',
-            dynamicThreshold: 0.3,
-          },
-        },
+        googleSearch: {}
       }];
     }
 
@@ -79,12 +74,11 @@ export default async function handler(req: Request) {
     });
   } catch (error: any) {
     console.error('Gemini API error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Unknown error',
+      details: error.toString() 
+    }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-}
       headers: { 'Content-Type': 'application/json' },
     });
   }
