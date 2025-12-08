@@ -22,9 +22,9 @@ export default async function handler(req: Request) {
 
     const ai = new GoogleGenerativeAI(apiKey);
     
-    // Use stable Gemini 1.5 Flash model for reliability
+    // Use stable Gemini 2.0 Flash model
     const modelConfig: any = {
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: systemInstruction,
     };
 
