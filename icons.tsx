@@ -52,12 +52,28 @@ export const DownloadIcon: React.FC<IconProps> = (props) => (
 
 export const RobotIcon: React.FC<IconProps> = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2a3 3 0 0 1 3 3v4H9V5a3 3 0 0 1 3-3z" />
-    <path d="M8 9H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-4" />
-    <circle cx="9" cy="14" r="1" fill="currentColor" />
-    <circle cx="15" cy="14" r="1" fill="currentColor" />
-    <path d="M7 20v2" />
-    <path d="M17 20v2" />
+    {/* Head */}
+    <rect x="5" y="2" width="14" height="12" rx="2" />
+    {/* Left Eye */}
+    <circle cx="10" cy="7" r="1.5" fill="currentColor" />
+    {/* Right Eye */}
+    <circle cx="14" cy="7" r="1.5" fill="currentColor" />
+    {/* Mouth */}
+    <path d="M10 10h4" strokeWidth="1.5" />
+    {/* Antenna Left */}
+    <line x1="8" y1="2" x2="7" y2="-1" />
+    {/* Antenna Right */}
+    <line x1="16" y1="2" x2="17" y2="-1" />
+    {/* Body */}
+    <rect x="6" y="14" width="12" height="8" rx="1" />
+    {/* Left Arm */}
+    <line x1="6" y1="16" x2="2" y2="16" strokeWidth="1.5" />
+    {/* Right Arm */}
+    <line x1="18" y1="16" x2="22" y2="16" strokeWidth="1.5" />
+    {/* Left Hand */}
+    <circle cx="2" cy="16" r="1" fill="currentColor" />
+    {/* Right Hand */}
+    <circle cx="22" cy="16" r="1" fill="currentColor" />
   </svg>
 );
 
