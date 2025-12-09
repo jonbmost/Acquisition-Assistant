@@ -23,7 +23,7 @@ export default async function handler(req: Request) {
     const openai = new OpenAI({ apiKey });
 
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'o3-mini',
       messages: messages,
       stream: true,
     });
