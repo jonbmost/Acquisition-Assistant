@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { Message } from './types';
 import { UserIcon, BotIcon, SourceIcon, DownloadIcon } from './icons';
+import { jsPDF } from 'jspdf';
+import { asBlob } from 'html-docx-js/dist/html-docx';
 
 // Simple markdown-to-JSX parser
 const SimpleMarkdown: React.FC<{ text: string }> = ({ text }) => {
@@ -54,8 +56,9 @@ const SimpleMarkdown: React.FC<{ text: string }> = ({ text }) => {
 
 const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
   const isUser = message.role === 'user';
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
-  const downloadContent = () => {
+  const downloadAsTXT = () => {
     const blob = new Blob([message.text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -65,6 +68,53 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    setShowDownloadMenu(false);
+  };
+
+  const downloadAsPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - 2 * margin;
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.text('Acquisition Assistant Response', margin, 20);
+    
+    // Add content
+    doc.setFontSize(11);
+    const lines = doc.splitTextToSize(message.text, maxWidth);
+    doc.text(lines, margin, 35);
+    
+    doc.save(`AIT_Response_${message.id}.pdf`);
+    setShowDownloadMenu(false);
+  };
+
+  const downloadAsDOCX = async () => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Acquisition Assistant Response</title>
+        </head>
+        <body>
+          <h1>Acquisition Assistant Response</h1>
+          <pre style="white-space: pre-wrap; font-family: Arial, sans-serif;">${message.text}</pre>
+        </body>
+      </html>
+    `;
+    
+    const converted = await asBlob(htmlContent);
+    const url = URL.createObjectURL(converted);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AIT_Response_${message.id}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowDownloadMenu(false);
   };
 
   return (
@@ -104,15 +154,38 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
           </div>
         )}
         {!isUser && message.text && (
-            <div className="flex justify-end mt-3 pt-2 border-t border-gray-700/50">
+            <div className="flex justify-end mt-3 pt-2 border-t border-gray-700/50 relative">
                 <button 
-                    onClick={downloadContent}
+                    onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                     className="flex items-center text-xs text-gray-400 hover:text-cyan-400 transition-colors duration-200"
                     aria-label="Download this response"
                 >
                     <DownloadIcon className="h-4 w-4 mr-1" />
                     Download
                 </button>
+                
+                {showDownloadMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden z-10">
+                    <button
+                      onClick={downloadAsTXT}
+                      className="block w-full px-4 py-2 text-left text-xs text-gray-300 hover:bg-gray-800 hover:text-cyan-400 transition-colors"
+                    >
+                      Download as TXT
+                    </button>
+                    <button
+                      onClick={downloadAsPDF}
+                      className="block w-full px-4 py-2 text-left text-xs text-gray-300 hover:bg-gray-800 hover:text-cyan-400 transition-colors"
+                    >
+                      Download as PDF
+                    </button>
+                    <button
+                      onClick={downloadAsDOCX}
+                      className="block w-full px-4 py-2 text-left text-xs text-gray-300 hover:bg-gray-800 hover:text-cyan-400 transition-colors"
+                    >
+                      Download as DOCX
+                    </button>
+                  </div>
+                )}
             </div>
         )}
       </div>
