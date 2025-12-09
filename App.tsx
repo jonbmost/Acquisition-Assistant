@@ -90,8 +90,6 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-hidden">
         <ChatWindow 
           knowledgeBase={knowledgeBase}
-          onAddDocument={handleAddDocument}
-          onRemoveDocument={handleRemoveDocument}
         />
       </main>
     </div>

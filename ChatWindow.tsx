@@ -1,23 +1,19 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
 import { SYSTEM_INSTRUCTION, MAX_DOCUMENT_LENGTH, AI_MODELS, type AIModel } from './constants';
-import type { Message, GroundingChunk, KnowledgeDocument } from './types';
+import type { Message, KnowledgeDocument } from './types';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import { DownloadIcon } from './icons';
 
 interface ChatWindowProps {
   knowledgeBase: KnowledgeDocument[];
-  onAddDocument: (file: File) => Promise<void>;
-  onRemoveDocument: (docId: string) => void;
 }
 
 const CHAT_HISTORY_STORAGE_KEY = 'ait-chat-history';
 const MODEL_SELECTION_STORAGE_KEY = 'ait-selected-model';
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase, onAddDocument, onRemoveDocument }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +51,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase, onAddDocument, o
       });
     }
     setMessages(loadedMessages);
+    // Scroll to bottom after loading messages
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   }, []);
 
   // Save model selection when it changes
@@ -281,14 +281,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase, onAddDocument, o
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto">
       {/* Model Selector */}
-      <div className="p-3 bg-gray-800/50 border-b border-gray-700 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <label htmlFor="model-select" className="text-sm text-gray-400">AI Model:</label>
+      <div className="p-2 md:p-3 bg-gray-800/50 border-b border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="flex items-center space-x-2 md:space-x-3">
+          <label htmlFor="model-select" className="text-xs md:text-sm text-gray-400">AI Model:</label>
           <select
             id="model-select"
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value as AIModel)}
-            className="bg-gray-700 text-gray-100 text-sm rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="bg-gray-700 text-gray-100 text-xs md:text-sm rounded px-2 md:px-3 py-1 md:py-1.5 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             disabled={isLoading}
           >
             <option value="gemini">{AI_MODELS.gemini.name}</option>
@@ -298,12 +298,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase, onAddDocument, o
         <span className="text-xs text-gray-500">Using: {AI_MODELS[selectedModel].model}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6">
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
         {isLoading && messages[messages.length - 1]?.role === 'user' && (
-           <div className="flex items-center space-x-3 animate-pulse ml-12">
+           <div className="flex items-center space-x-3 animate-pulse ml-8 md:ml-12">
               <div className="h-2.5 bg-gray-600 rounded-full w-32"></div>
               <div className="h-2.5 bg-gray-600 rounded-full w-24"></div>
               <div className="h-2.5 bg-gray-600 rounded-full w-48"></div>
@@ -311,22 +311,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase, onAddDocument, o
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="p-4 md:p-6 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
-        {error && <div className="text-red-400 text-sm mb-2 text-center">{error}</div>}
+      <div className="p-3 md:p-6 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
+        {error && <div className="text-red-400 text-xs md:text-sm mb-2 text-center">{error}</div>}
         <ChatInput 
           onSendMessage={handleSendMessage} 
           isLoading={isLoading}
-          knowledgeBase={knowledgeBase}
-          onAddDocument={onAddDocument}
-          onRemoveDocument={onRemoveDocument}
         />
-        <div className="flex justify-between items-center mt-3">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mt-3">
             <p className="text-xs text-gray-500 text-center">
-                AIT is an AI assistant. Responses may be inaccurate. Please verify important information.
+                AIT is an AI assistant. Responses may be inaccurate. Verify important information.
             </p>
             <button
                 onClick={downloadChatHistory}
-                className="flex items-center text-xs text-gray-400 hover:text-cyan-400 transition-colors duration-200"
+                className="flex items-center text-xs text-gray-400 hover:text-cyan-400 transition-colors duration-200 whitespace-nowrap"
                 aria-label="Download chat history"
             >
                 <DownloadIcon className="h-4 w-4 mr-1" />
