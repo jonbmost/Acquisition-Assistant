@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import type { Message } from './types';
 import { UserIcon, BotIcon, SourceIcon, DownloadIcon } from './icons';
 import { jsPDF } from 'jspdf';
-import { asBlob } from 'html-docx-js/dist/html-docx';
+import { Document, Paragraph, Packer, TextRun } from 'docx';
+import { saveAs } from 'file-saver';
 
 // Simple markdown-to-JSX parser
 const SimpleMarkdown: React.FC<{ text: string }> = ({ text }) => {
@@ -91,29 +92,31 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
   };
 
   const downloadAsDOCX = async () => {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Acquisition Assistant Response</title>
-        </head>
-        <body>
-          <h1>Acquisition Assistant Response</h1>
-          <pre style="white-space: pre-wrap; font-family: Arial, sans-serif;">${message.text}</pre>
-        </body>
-      </html>
-    `;
-    
-    const converted = await asBlob(htmlContent);
-    const url = URL.createObjectURL(converted);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `AIT_Response_${message.id}.docx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Split text into paragraphs
+    const paragraphs = message.text.split('\n').map(line => 
+      new Paragraph({
+        children: [new TextRun(line || ' ')],
+        spacing: { after: 200 }
+      })
+    );
+
+    // Create document
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({
+            children: [new TextRun({ text: 'Acquisition Assistant Response', bold: true, size: 32 })],
+            spacing: { after: 400 }
+          }),
+          ...paragraphs
+        ]
+      }]
+    });
+
+    // Generate and download
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `AIT_Response_${message.id}.docx`);
     setShowDownloadMenu(false);
   };
 
