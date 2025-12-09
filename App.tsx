@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import ChatWindow from './ChatWindow';
-import Sidebar from './Sidebar';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
 import { loadRepositoryKnowledgeBase } from './knowledgeBaseLoader';
@@ -88,16 +87,13 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 font-sans">
       <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar 
-          documents={knowledgeBase} 
+      <main className="flex-1 overflow-hidden">
+        <ChatWindow 
+          knowledgeBase={knowledgeBase}
           onAddDocument={handleAddDocument}
           onRemoveDocument={handleRemoveDocument}
         />
-        <main className="flex-1 overflow-hidden">
-          <ChatWindow knowledgeBase={knowledgeBase} />
-        </main>
-      </div>
+      </main>
     </div>
   );
 };

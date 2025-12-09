@@ -1,16 +1,22 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { SendIcon, UploadIcon, PaperclipIcon } from './icons';
+import type { KnowledgeDocument } from './types';
 
 interface ChatInputProps {
   onSendMessage: (text: string, file: File | null) => void;
   isLoading: boolean;
+  knowledgeBase: KnowledgeDocument[];
+  onAddDocument: (file: File) => Promise<void>;
+  onRemoveDocument: (docId: string) => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, knowledgeBase, onAddDocument, onRemoveDocument }) => {
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const kbFileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -44,6 +50,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     }
   };
 
+  const handleKBFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      await onAddDocument(e.target.files[0]);
+      if (kbFileInputRef.current) {
+        kbFileInputRef.current.value = '';
+      }
+    }
+  };
+
   const removeFile = () => {
     setFile(null);
     if (fileInputRef.current) {
@@ -51,8 +66,58 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     }
   };
 
+  const userDocuments = knowledgeBase.filter(doc => !doc.isFromRepo);
+
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-2 flex items-end gap-2">
+    <div className="flex flex-col gap-2">
+      {/* Knowledge Base Management */}
+      <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+        <button
+          onClick={() => setShowKnowledgeBase(!showKnowledgeBase)}
+          className="w-full flex items-center justify-between text-sm text-gray-300 hover:text-cyan-400 transition-colors"
+        >
+          <span className="font-semibold">Knowledge Base ({userDocuments.length} documents)</span>
+          <span className="text-xl">{showKnowledgeBase ? '−' : '+'}</span>
+        </button>
+        
+        {showKnowledgeBase && (
+          <div className="mt-3 space-y-2">
+            <input
+              type="file"
+              ref={kbFileInputRef}
+              onChange={handleKBFileChange}
+              className="hidden"
+              accept=".txt,.md,.docx,.pdf"
+            />
+            <button
+              onClick={() => kbFileInputRef.current?.click()}
+              className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              <UploadIcon className="h-4 w-4" />
+              Upload Document
+            </button>
+            
+            {userDocuments.length > 0 && (
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {userDocuments.map(doc => (
+                  <div key={doc.id} className="flex items-center justify-between bg-gray-700 px-3 py-2 rounded text-xs">
+                    <span className="truncate text-gray-300">{doc.name}</span>
+                    <button
+                      onClick={() => onRemoveDocument(doc.id)}
+                      className="text-red-400 hover:text-red-300 ml-2"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Chat Input */}
+      <div className="bg-gray-800 border border-gray-700 rounded-lg p-2 flex items-end gap-2">
       <input
         type="file"
         ref={fileInputRef}
@@ -100,6 +165,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           <SendIcon className="h-6 w-6" />
         )}
       </button>
+    </div>
     </div>
   );
 };

@@ -10,12 +10,14 @@ import { DownloadIcon } from './icons';
 
 interface ChatWindowProps {
   knowledgeBase: KnowledgeDocument[];
+  onAddDocument: (file: File) => Promise<void>;
+  onRemoveDocument: (docId: string) => void;
 }
 
 const CHAT_HISTORY_STORAGE_KEY = 'ait-chat-history';
 const MODEL_SELECTION_STORAGE_KEY = 'ait-selected-model';
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase, onAddDocument, onRemoveDocument }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
   const [isLoading, setIsLoading] = useState(false);
@@ -311,7 +313,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
       </div>
       <div className="p-4 md:p-6 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
         {error && <div className="text-red-400 text-sm mb-2 text-center">{error}</div>}
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isLoading}
+          knowledgeBase={knowledgeBase}
+          onAddDocument={onAddDocument}
+          onRemoveDocument={onRemoveDocument}
+        />
         <div className="flex justify-between items-center mt-3">
             <p className="text-xs text-gray-500 text-center">
                 AIT is an AI assistant. Responses may be inaccurate. Please verify important information.
