@@ -19,6 +19,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasUserInteracted = useRef(false);
 
   // Load chat history from localStorage on startup
   useEffect(() => {
@@ -51,10 +52,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
       });
     }
     setMessages(loadedMessages);
-    // Scroll to bottom after loading messages
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
   }, []);
 
   // Save model selection when it changes
@@ -75,11 +72,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
 
 
   useEffect(() => {
+    // Skip the first run to avoid auto-scrolling on initial load
+    if (!hasUserInteracted.current) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
   const handleSendMessage = useCallback(async (inputText: string, file: File | null) => {
     if (isLoading) return;
+
+    hasUserInteracted.current = true;
 
     setIsLoading(true);
     setError(null);
