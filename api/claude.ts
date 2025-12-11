@@ -1,5 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
-
 export const config = {
   runtime: 'edge',
 };
@@ -20,24 +18,61 @@ export default async function handler(req: Request) {
       });
     }
 
-    const anthropic = new Anthropic({ apiKey });
-
-    const stream = await anthropic.messages.stream({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8192,
-      system: systemInstruction,
-      messages: messages,
+    // Direct HTTP call to Anthropic API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8192,
+        system: systemInstruction,
+        messages: messages,
+        stream: true,
+      }),
     });
 
-    // Create a readable stream for the response
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Anthropic API error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    // Create a readable stream that converts SSE to JSON lines
     const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
     const readableStream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of stream) {
-            if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-              const text = chunk.delta.text;
-              controller.enqueue(encoder.encode(JSON.stringify({ text }) + '\n'));
+          const reader = response.body?.getReader();
+          if (!reader) {
+            controller.close();
+            return;
+          }
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim());
+            
+            for (const line of lines) {
+              if (line.startsWith('data:')) {
+                const data = line.slice(5).trim();
+                if (data === '[DONE]') continue;
+                
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+                    controller.enqueue(encoder.encode(JSON.stringify({ text: parsed.delta.text }) + '\n'));
+                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                }
+              }
             }
           }
           controller.close();
@@ -55,7 +90,7 @@ export default async function handler(req: Request) {
     });
   } catch (error: any) {
     console.error('Claude API error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error.message || 'Unknown error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
