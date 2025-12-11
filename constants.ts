@@ -31,12 +31,16 @@ export const TRUSTED_SOURCES = [
 
 export const MAX_DOCUMENT_LENGTH = 15000;
 
-export type AIModel = 'claude';
+export type AIModel = 'gemini' | 'openai';
 
 export const AI_MODELS = {
-  claude: {
-    name: 'Claude (Anthropic)',
-    model: 'claude-sonnet-4-20250514',
+  gemini: {
+    name: 'Google Gemini',
+    model: 'gemini-2.0-flash',
+  },
+  openai: {
+    name: 'OpenAI ChatGPT',
+    model: 'gpt-4o',
   },
 } as const;
 
