@@ -128,31 +128,51 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
         { role: 'user' as const, content: finalPrompt },
       ];
 
-      // Call Anthropic API directly (works for both dev and production on GitHub Pages)
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-      if (!apiKey) {
-        throw new Error('VITE_ANTHROPIC_API_KEY not configured');
-      }
+      // Check if we're in local dev or production
+      const isDev = import.meta.env.DEV;
+      let response: Response;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'x-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 8192,
-          system: SYSTEM_INSTRUCTION,
-          messages: claudeMessages,
-          stream: true,
-        }),
-      });
+      if (isDev) {
+        // Local dev: call Anthropic API directly
+        const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+        if (!apiKey) {
+          throw new Error('VITE_ANTHROPIC_API_KEY not configured in .env file');
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Claude API error: ${errorData.error?.message || response.statusText}`);
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01',
+            'x-api-key': apiKey,
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 8192,
+            system: SYSTEM_INSTRUCTION,
+            messages: claudeMessages,
+            stream: true,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Claude API error: ${errorData.error?.message || response.statusText}`);
+        }
+      } else {
+        // Production (Vercel): use serverless API route
+        response = await fetch('/api/claude', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: claudeMessages,
+            systemInstruction: SYSTEM_INSTRUCTION,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get response from Claude API');
+        }
       }
 
       const reader = response.body?.getReader();
@@ -166,25 +186,43 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
 
           const chunk = decoder.decode(value);
           
-          // Parse Server-Sent Events format from Anthropic API
-          const lines = chunk.split('\n').filter(line => line.trim());
-          for (const line of lines) {
-            if (line.startsWith('data:')) {
-              const data = line.slice(5).trim();
-              if (data === '[DONE]') continue;
-              
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
-                  fullResponseText += parsed.delta.text;
-                  setMessages(prev =>
-                    prev.map(msg =>
-                      msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
-                    )
-                  );
+          if (isDev) {
+            // Local dev: Parse Server-Sent Events from Anthropic
+            const lines = chunk.split('\n').filter(line => line.trim());
+            for (const line of lines) {
+              if (line.startsWith('data:')) {
+                const data = line.slice(5).trim();
+                if (data === '[DONE]') continue;
+                
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+                    fullResponseText += parsed.delta.text;
+                    setMessages(prev =>
+                      prev.map(msg =>
+                        msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
+                      )
+                    );
+                  }
+                } catch (e) {
+                  console.error('Error parsing SSE chunk:', e);
                 }
+              }
+            }
+          } else {
+            // Production (Vercel): Parse JSON lines from serverless function
+            const lines = chunk.split('\n').filter(line => line.trim());
+            for (const line of lines) {
+              try {
+                const { text } = JSON.parse(line);
+                fullResponseText += text;
+                setMessages(prev =>
+                  prev.map(msg =>
+                    msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
+                  )
+                );
               } catch (e) {
-                console.error('Error parsing SSE chunk:', e);
+                console.error('Error parsing chunk:', e);
               }
             }
           }
