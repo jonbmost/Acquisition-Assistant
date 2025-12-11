@@ -210,19 +210,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
               }
             }
           } else {
-            // Production (Vercel): Parse JSON lines from serverless function
+            // Production (Vercel): Parse SSE from serverless function (it passes through Anthropic's stream)
             const lines = chunk.split('\n').filter(line => line.trim());
             for (const line of lines) {
-              try {
-                const { text } = JSON.parse(line);
-                fullResponseText += text;
-                setMessages(prev =>
-                  prev.map(msg =>
-                    msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
-                  )
-                );
-              } catch (e) {
-                console.error('Error parsing chunk:', e);
+              if (line.startsWith('data:')) {
+                const data = line.slice(5).trim();
+                if (data === '[DONE]') continue;
+                
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+                    fullResponseText += parsed.delta.text;
+                    setMessages(prev =>
+                      prev.map(msg =>
+                        msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
+                      )
+                    );
+                  }
+                } catch (e) {
+                  console.error('Error parsing chunk:', e);
+                }
               }
             }
           }

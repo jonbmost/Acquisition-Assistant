@@ -1,5 +1,5 @@
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
 };
 
 export default async function handler(req: Request) {
@@ -12,11 +12,14 @@ export default async function handler(req: Request) {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY not found in environment');
       return new Response(JSON.stringify({ error: 'API key not configured' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('Calling Anthropic API...');
 
     // Direct HTTP call to Anthropic API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -36,61 +39,34 @@ export default async function handler(req: Request) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Anthropic API error: ${errorData.error?.message || response.statusText}`);
+      const errorText = await response.text();
+      console.error('Anthropic API error:', response.status, errorText);
+      const errorData = JSON.parse(errorText || '{}');
+      return new Response(JSON.stringify({ 
+        error: `Anthropic API error: ${errorData.error?.message || response.statusText}`,
+        details: errorData 
+      }), {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    // Create a readable stream that converts SSE to JSON lines
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        try {
-          const reader = response.body?.getReader();
-          if (!reader) {
-            controller.close();
-            return;
-          }
+    console.log('Anthropic API response received, streaming...');
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim());
-            
-            for (const line of lines) {
-              if (line.startsWith('data:')) {
-                const data = line.slice(5).trim();
-                if (data === '[DONE]') continue;
-                
-                try {
-                  const parsed = JSON.parse(data);
-                  if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
-                    controller.enqueue(encoder.encode(JSON.stringify({ text: parsed.delta.text }) + '\n'));
-                  }
-                } catch (e) {
-                  // Skip invalid JSON
-                }
-              }
-            }
-          }
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-    });
-
-    return new Response(readableStream, {
+    // Pass through the stream directly
+    return new Response(response.body, {
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
       },
     });
   } catch (error: any) {
-    console.error('Claude API error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Unknown error' }), {
+    console.error('Claude API handler error:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Unknown error',
+      stack: error.stack 
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
