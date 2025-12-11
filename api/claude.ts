@@ -1,22 +1,30 @@
-export const config = {
-  runtime: 'nodejs',
-};
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: Request) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   try {
-    const { messages, systemInstruction } = await req.json();
+    const { messages, systemInstruction } = req.body;
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       console.error('ANTHROPIC_API_KEY not found in environment');
-      return new Response(JSON.stringify({ error: 'API key not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      res.status(500).json({ error: 'API key not configured' });
+      return;
     }
 
     console.log('Calling Anthropic API...');
@@ -42,33 +50,42 @@ export default async function handler(req: Request) {
       const errorText = await response.text();
       console.error('Anthropic API error:', response.status, errorText);
       const errorData = JSON.parse(errorText || '{}');
-      return new Response(JSON.stringify({ 
+      res.status(response.status).json({ 
         error: `Anthropic API error: ${errorData.error?.message || response.statusText}`,
         details: errorData 
-      }), {
-        status: response.status,
-        headers: { 'Content-Type': 'application/json' },
       });
+      return;
     }
 
     console.log('Anthropic API response received, streaming...');
 
-    // Pass through the stream directly
-    return new Response(response.body, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
+    // Set headers for streaming
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    // Pipe the stream to the response
+    if (response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        res.write(chunk);
+      }
+    }
+
+    res.end();
   } catch (error: any) {
     console.error('Claude API handler error:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message || 'Unknown error',
-      stack: error.stack 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: error.message || 'Unknown error',
+        stack: error.stack 
+      });
+    }
   }
 }
