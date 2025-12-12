@@ -147,6 +147,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
           system: SYSTEM_INSTRUCTION,
           messages: claudeMessages,
           stream: true,
+          // MCP Server for federal acquisition context
+          mcp_servers: [
+            {
+              type: 'url',
+              url: 'https://aitbot-tau.vercel.app/sse',
+              name: 'federal-acquisition'
+            }
+          ]
         }),
       });
 
