@@ -2,32 +2,45 @@
 
 ## Security Notice
 
-Your API keys are now secured server-side using Vercel serverless functions. They will never be exposed in the browser.
+Your API key is configured for client-side use. For production, consider additional security measures.
 
-## Adding Your OpenAI API Key
+## Adding Your Claude (Anthropic) API Key
 
-1. **Get your OpenAI API key:**
-   - Go to https://platform.openai.com/api-keys
+1. **Get your Anthropic API key:**
+   - Go to https://console.anthropic.com/
    - Sign in or create an account
-   - Click "Create new secret key"
-   - Copy the key (it starts with `sk-`)
+   - Navigate to API Keys
+   - Click "Create Key"
+   - Copy the key (it starts with `sk-ant-`)
 
 2. **For Local Development:**
    - Create a `.env` file in the project root (if it doesn't exist)
-   - Add: `OPENAI_API_KEY=sk-your-key-here`
+   - Add: `VITE_ANTHROPIC_API_KEY=sk-ant-your-key-here`
 
-3. **For Vercel Deployment:**
-   - Go to your Vercel project dashboard
-   - Settings → Environment Variables
-   - Add: `OPENAI_API_KEY` with your key
-   - **Important:** Do NOT check "Expose to client" - keep it server-side only
+3. **For Deployment (Vercel, Netlify, etc.):**
+   - Go to your deployment platform's dashboard
+   - Navigate to Environment Variables settings
+   - Add: `VITE_ANTHROPIC_API_KEY` with your key value
+   - Redeploy your application
 
-## Adding Your Gemini API Key
+## Example .env file
 
-1. **Get your Gemini API key:**
-   - Go to https://makersuite.google.com/app/apikey
-   - Sign in with your Google account
-   - Click "Create API Key"
+```
+VITE_ANTHROPIC_API_KEY=sk-ant-api03-abc123xyz...
+```
+
+## Using the Model
+
+- The app uses Claude Sonnet 4 for all responses
+- Claude provides excellent reasoning and context understanding
+- Ideal for complex acquisition tasks and document generation
+
+## Notes
+
+- API key is embedded in the build (exposed to client)
+- The `.env` file is in `.gitignore` and never committed
+- For production deployments, set `VITE_ANTHROPIC_API_KEY` in your platform's environment variables
+
    - Copy the key
 
 2. **For Local Development:**

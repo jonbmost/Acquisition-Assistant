@@ -15,7 +15,7 @@ const MODEL_SELECTION_STORAGE_KEY = 'ait-selected-model';
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('claude');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,7 +37,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     // Load selected model
     try {
       const storedModel = localStorage.getItem(MODEL_SELECTION_STORAGE_KEY);
-      if (storedModel && (storedModel === 'gemini' || storedModel === 'openai')) {
+      if (storedModel && storedModel === 'claude') {
         setSelectedModel(storedModel);
       }
     } catch (e) {
@@ -118,121 +118,70 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
 
       const finalPrompt = `${knowledgeBasePrompt}${filePrompt}User Request: ${inputText}`;
 
-      if (selectedModel === 'gemini') {
-        const history = messages
+      // Call Claude API directly
+      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        throw new Error('VITE_ANTHROPIC_API_KEY not configured');
+      }
+
+      const claudeMessages = [
+        ...messages
           .filter(msg => msg.id !== 'initial-message')
           .map(msg => ({
-            role: msg.role === 'model' ? 'model' : 'user',
-            parts: [{ text: msg.text }],
-          }));
+            role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user',
+            content: msg.text,
+          })),
+        { role: 'user' as const, content: finalPrompt },
+      ];
 
-        const response = await fetch('/api/gemini', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: finalPrompt,
-            history: history,
-            systemInstruction: SYSTEM_INSTRUCTION,
-            enableSearch: true, // Enable Google Search grounding
-          }),
-        });
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01',
+          'x-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 8192,
+          system: SYSTEM_INSTRUCTION,
+          messages: claudeMessages,
+          stream: true,
+        }),
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to get response from Gemini API');
-        }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Claude API error: ${errorData.error?.message || response.statusText}`);
+      }
 
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-        let fullResponseText = '';
-        let collectedSources: { uri: string; title: string }[] = [];
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullResponseText = '';
 
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim());
-            
-            for (const line of lines) {
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim());
+          
+          for (const line of lines) {
+            if (line.startsWith('data:')) {
+              const data = line.slice(5).trim();
+              if (data === '[DONE]') continue;
+              
               try {
-                const { text, groundingMetadata } = JSON.parse(line);
-                fullResponseText += text;
-                
-                // Extract sources from grounding metadata
-                if (groundingMetadata?.groundingChunks) {
-                  for (const chunk of groundingMetadata.groundingChunks) {
-                    if (chunk.web) {
-                      const source = {
-                        uri: chunk.web.uri,
-                        title: chunk.web.title || chunk.web.uri,
-                      };
-                      // Avoid duplicates
-                      if (!collectedSources.some(s => s.uri === source.uri)) {
-                        collectedSources.push(source);
-                      }
-                    }
-                  }
+                const parsed = JSON.parse(data);
+                if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+                  fullResponseText += parsed.delta.text;
+                  setMessages(prev =>
+                    prev.map(msg =>
+                      msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
+                    )
+                  );
                 }
-                
-                setMessages(prev =>
-                  prev.map(msg =>
-                    msg.id === modelMessageId ? { 
-                      ...msg, 
-                      text: fullResponseText,
-                      sources: collectedSources.length > 0 ? collectedSources : undefined
-                    } : msg
-                  )
-                );
-              } catch (e) {
-                console.error('Error parsing chunk:', e);
-              }
-            }
-          }
-        }
-      } else if (selectedModel === 'openai') {
-        const openaiMessages = [
-          { role: 'system' as const, content: SYSTEM_INSTRUCTION },
-          ...messages
-            .filter(msg => msg.id !== 'initial-message')
-            .map(msg => ({
-              role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user',
-              content: msg.text,
-            })),
-          { role: 'user' as const, content: finalPrompt },
-        ];
-
-        const response = await fetch('/api/openai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: openaiMessages }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to get response from OpenAI API');
-        }
-
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-        let fullResponseText = '';
-
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim());
-            
-            for (const line of lines) {
-              try {
-                const { text } = JSON.parse(line);
-                fullResponseText += text;
-                setMessages(prev =>
-                  prev.map(msg =>
-                    msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
-                  )
-                );
               } catch (e) {
                 console.error('Error parsing chunk:', e);
               }
@@ -292,8 +241,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
             className="bg-gray-700 text-gray-100 text-xs md:text-sm rounded px-2 md:px-3 py-1 md:py-1.5 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             disabled={isLoading}
           >
-            <option value="gemini">{AI_MODELS.gemini.name}</option>
-            <option value="openai">{AI_MODELS.openai.name}</option>
+            <option value="claude">{AI_MODELS.claude.name}</option>
           </select>
         </div>
       </div>
