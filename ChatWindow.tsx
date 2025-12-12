@@ -128,8 +128,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
         { role: 'user' as const, content: finalPrompt },
       ];
 
-      // Call serverless function with MCP integration
-      const response = await fetch('/api/chat-with-mcp', {
+      // Call serverless function
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
