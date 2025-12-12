@@ -118,12 +118,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
 
       const finalPrompt = `${knowledgeBasePrompt}${filePrompt}User Request: ${inputText}`;
 
-      // Call Claude API directly
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-      if (!apiKey) {
-        throw new Error('VITE_ANTHROPIC_API_KEY not configured');
-      }
-
       const claudeMessages = [
         ...messages
           .filter(msg => msg.id !== 'initial-message')
@@ -134,77 +128,45 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
         { role: 'user' as const, content: finalPrompt },
       ];
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Call serverless function with MCP integration
+      const response = await fetch('/api/chat-with-mcp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'x-api-key': apiKey,
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 8192,
-          system: SYSTEM_INSTRUCTION,
           messages: claudeMessages,
-          stream: true,
-          // MCP Server for federal acquisition context
-          mcp_servers: [
-            {
-              type: 'url',
-              url: 'https://aitbot-tau.vercel.app/sse',
-              name: 'federal-acquisition'
-            }
-          ]
+          system: SYSTEM_INSTRUCTION,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Claude API error: ${errorData.error?.message || response.statusText}`);
+        throw new Error(errorData.error || errorData.details?.error?.message || response.statusText);
       }
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullResponseText = '';
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n').filter(line => line.trim());
-          
-          for (const line of lines) {
-            if (line.startsWith('data:')) {
-              const data = line.slice(5).trim();
-              if (data === '[DONE]') continue;
-              
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
-                  fullResponseText += parsed.delta.text;
-                  setMessages(prev =>
-                    prev.map(msg =>
-                      msg.id === modelMessageId ? { ...msg, text: fullResponseText } : msg
-                    )
-                  );
-                }
-              } catch (e) {
-                console.error('Error parsing chunk:', e);
-              }
-            }
-          }
-        }
-      }
+      const data = await response.json();
+      const responseText = data.content?.[0]?.text || 'No response received';
+      
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === modelMessageId ? { ...msg, text: responseText } : msg
+        )
+      );
 
     } catch (e: any) {
-      console.error(e);
-      const errorMessage = `An error occurred: ${e.message || 'Please try again.'}`;
+      console.error('Chat error:', e);
+      let errorMessage = e.message || 'Please try again.';
+      
+      // Provide helpful context for common errors
+      if (errorMessage.includes('Failed to fetch')) {
+        errorMessage = 'Network error. Please check your API key is set in environment variables (VITE_ANTHROPIC_API_KEY) and try again.';
+      }
+      
       setError(errorMessage);
       setMessages(prev =>
         prev.map(msg =>
-          msg.id === modelMessageId ? { ...msg, text: `Sorry, I encountered an error. ${errorMessage}` } : msg
+          msg.id === modelMessageId ? { ...msg, text: `Sorry, I encountered an error: ${errorMessage}` } : msg
         )
       );
     } finally {
