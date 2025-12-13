@@ -93,7 +93,7 @@ export default async function handler(req, res) {
 
     const model = resolveModelName();
 
-    // Call Anthropic API with MCP configuration
+    // Call Anthropic API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -105,16 +105,7 @@ export default async function handler(req, res) {
         model,
         max_tokens: 4096,
         system: system || 'You are a helpful AI assistant.',
-        messages: sanitizedMessages,
-        
-        // MCP server configuration - works server-side
-        mcp_servers: [
-          {
-            type: 'url',
-            url: 'https://aitbot-tau.vercel.app/sse',
-            name: 'federal-acquisition'
-          }
-        ]
+        messages: sanitizedMessages
       })
     });
 
