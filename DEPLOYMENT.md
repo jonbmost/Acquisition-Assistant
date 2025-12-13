@@ -7,7 +7,7 @@ The Acquisition Assistant (Agile Innovation Toolkit) is now configured for autom
 - **Build Tool**: Vite
 - **Framework**: React 18 with TypeScript
 - **Styling**: Tailwind CSS (via CDN)
-- **AI Integration**: Google Generative AI (Gemini)
+- **AI Integration**: Anthropic Claude Sonnet 4
 
 ## GitHub Pages Deployment
 
@@ -25,8 +25,8 @@ The application automatically deploys to GitHub Pages when you push to the `main
 2. **Configure API Key**:
    - Go to repository Settings → Secrets and variables → Actions
    - Add a new repository secret:
-     - Name: `VITE_GEMINI_API_KEY`
-     - Value: Your Google Gemini API key
+     - Name: `ANTHROPIC_API_KEY`
+     - Value: Your Anthropic Claude API key (server-side only)
 
 3. **Deploy**:
    - Push to main branch (already done!)
@@ -64,7 +64,7 @@ npm run preview
 
 Create a `.env` file in the root directory (not tracked in git):
 ```
-VITE_GEMINI_API_KEY=your_api_key_here
+ANTHROPIC_API_KEY=your_api_key_here
 ```
 
 ## Manual Deployment (Alternative)
@@ -107,19 +107,18 @@ This builds and pushes the `dist` folder to the `gh-pages` branch.
 
 ### Deployment Fails
 - Verify GitHub Pages is enabled in repository settings
-- Check that the `VITE_GEMINI_API_KEY` secret is set
+- Check that the `ANTHROPIC_API_KEY` secret is set
 - Review GitHub Actions logs in the Actions tab
 
 ### API Key Issues
-- Ensure your Gemini API key is valid
-- The app will work without an API key but AI features will be limited
+- Ensure your Anthropic API key is valid
 - For production, always use repository secrets, never commit API keys
 
 ## Next Steps
 
 1. Monitor the GitHub Actions workflow: https://github.com/jonbmost/Acquisition-Assistant/actions
 2. Once deployed, visit: https://jonbmost.github.io/Acquisition-Assistant/
-3. Add your Gemini API key in repository secrets if not already done
+3. Add your Anthropic API key in repository secrets if not already done
 
 ## Notes
 
