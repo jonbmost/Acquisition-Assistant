@@ -120,12 +120,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
 
       const claudeMessages = [
         ...messages
-          .filter(msg => msg.id !== 'initial-message')
+          .filter(msg => msg.id !== 'initial-message' && msg.text.trim().length > 0)
           .map(msg => ({
             role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user',
-            content: msg.text,
+            content: msg.text.trim(),
           })),
-        { role: 'user' as const, content: finalPrompt },
+        { role: 'user' as const, content: finalPrompt.trim() },
       ];
 
       // Call serverless function
@@ -160,7 +160,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
       
       // Provide helpful context for common errors
       if (errorMessage.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your API key is set in environment variables (VITE_ANTHROPIC_API_KEY) and try again.';
+        errorMessage = 'Network error. Please check your API key is set in environment variables (ANTHROPIC_API_KEY) and try again.';
       }
       
       setError(errorMessage);
