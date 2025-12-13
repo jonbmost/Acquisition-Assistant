@@ -1,10 +1,10 @@
 # Acquisition-Assistant
 
-An intelligent procurement assistant to support federal acquisition teams. Powered by Anthropic Claude 3.5 Sonnet.
+An intelligent procurement assistant to support federal acquisition teams. Powered by Anthropic Claude 4.
 
 ## Features
 
-- **Claude-Powered Guidance**: Uses Anthropic Claude 3.5 Sonnet for procurement assistance
+- **Claude-Powered Guidance**: Uses Anthropic Claude 4 for procurement assistance
 - **Knowledge Base**: Upload and manage custom documents
 - **Persistent Storage**: Chat history and documents saved locally
 - **Streaming Responses**: Real-time AI responses
@@ -18,7 +18,7 @@ An intelligent procurement assistant to support federal acquisition teams. Power
    - `ANTHROPIC_API_KEY` - Create in the Anthropic console (server-side only)
 5. Run the app: `npm run dev`
 
-> Use **Node 20.19**. Production builds on Vercel use `npm ci` followed by `npm run build`, matching this setup. Run `nvm use` in the repo root to pick up the pinned Node version from `.nvmrc`; set the same version (20.19) in the Vercel project settings if it differs.
+> Use **Node 24**. Production builds on Vercel use `npm ci` followed by `npm run build`, matching this setup. Run `nvm use` in the repo root to pick up the pinned Node version from `.nvmrc`; set the same version (24.x) in the Vercel project settings if it differs.
 
 ## Troubleshooting
 
