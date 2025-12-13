@@ -24,6 +24,33 @@ This project deploys to **Vercel** from the `main` branch. The `vercel.json` fil
   Then compare the `commit` shown to `git rev-parse HEAD`. If they match, the current code is live. If not, force a redeploy or trigger one from the Vercel dashboard.
 - If you need to redeploy a specific commit, use the Vercel dashboard’s “Redeploy” on that commit.
 
+### “Push to the main branch” banner
+If Vercel shows “To update your Production Deployment, push to the main branch,” the code you want live isn’t on `main`.
+
+1. Ensure your working tree is clean:
+   ```bash
+   git status -sb
+   ```
+2. Merge or rebase your feature branch onto `main` locally:
+   ```bash
+   git checkout main
+   git pull origin main
+   git merge <your-branch>
+   # or: git rebase <your-branch>
+   ```
+3. Push the updated `main` branch to trigger the production deploy:
+   ```bash
+   git push origin main
+   ```
+4. Verify production picked up the new commit:
+   ```bash
+   vercel deployments --prod --limit 1
+   git rev-parse HEAD
+   ```
+   The commit hashes should match.
+
+If you must deploy from a different branch, temporarily set the Production Branch in Vercel’s project settings or run `vercel --prod` from that branch, then return the Production Branch to `main` afterward.
+
 ## Local development
 
 ### Prerequisites
