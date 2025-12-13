@@ -1,6 +1,8 @@
 // api/chat.js
+// Explicitly declare the supported runtime; node version is enforced via engines/project settings
+export const runtime = 'nodejs';
+
 export const config = {
-  runtime: 'nodejs',
   maxDuration: 60
 };
 
@@ -16,10 +18,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid request: messages required' });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    
+    const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+    const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
+
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      return res.status(500).json({
+        error: 'API key not configured',
+        hint:
+          `Add ANTHROPIC_API_KEY to the ${activeEnv} environment (local .env or Vercel Project Settings → Environment Variables) and redeploy.`
+      });
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -30,7 +37,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 4096,
         system: system || 'You are a helpful federal acquisition assistant with expertise in FAR, agile acquisitions, and government contracting.',
         messages: messages
@@ -39,10 +46,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      const upstreamMessage =
+        (errorData && (errorData.error?.message || errorData.error)) ||
+        response.statusText ||
+        'Anthropic API request failed';
+
       console.error('Anthropic API error:', errorData);
-      return res.status(response.status).json({ 
-        error: 'API request failed',
-        details: errorData 
+      return res.status(response.status).json({
+        error: upstreamMessage,
+        details: errorData
       });
     }
 
