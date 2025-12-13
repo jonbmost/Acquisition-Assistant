@@ -4,7 +4,7 @@ import { SYSTEM_INSTRUCTION, MAX_DOCUMENT_LENGTH, AI_MODELS, type AIModel } from
 import type { Message, KnowledgeDocument } from './types';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
-import { DownloadIcon } from './icons';
+import { ArrowDownIcon, DownloadIcon } from './icons';
 
 interface ChatWindowProps {
   knowledgeBase: KnowledgeDocument[];
@@ -18,7 +18,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [selectedModel, setSelectedModel] = useState<AIModel>('claude');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showScrollToEnd, setShowScrollToEnd] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasUserInteracted = useRef(false);
 
   // Load chat history from localStorage on startup
@@ -76,6 +78,34 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     if (!hasUserInteracted.current) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  const updateScrollIndicator = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    setShowScrollToEnd(distanceFromBottom > 120);
+  }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      hasUserInteracted.current = true;
+      updateScrollIndicator();
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    updateScrollIndicator();
+
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [updateScrollIndicator]);
+
+  const scrollToBottom = useCallback(() => {
+    hasUserInteracted.current = true;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollToEnd(false);
+  }, []);
 
   const handleSendMessage = useCallback(async (inputText: string, file: File | null) => {
     if (isLoading) return;
@@ -199,7 +229,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto">
+    <div className="flex flex-col h-full max-w-5xl mx-auto relative">
       {/* Model Selector */}
       <div className="p-2 md:p-3 bg-gray-800/50 border-b border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div className="flex items-center space-x-2 md:space-x-3">
@@ -216,7 +246,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6">
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6"
+      >
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
@@ -229,9 +262,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
         )}
         <div ref={messagesEndRef} />
       </div>
+      {showScrollToEnd && (
+        <button
+          type="button"
+          onClick={scrollToBottom}
+          className="absolute right-4 bottom-32 md:bottom-36 flex items-center space-x-2 px-3 py-2 bg-gray-800/90 text-gray-200 rounded-full shadow-lg border border-gray-700 hover:bg-gray-700 transition-colors"
+          aria-label="Scroll to latest message"
+        >
+          <ArrowDownIcon className="w-4 h-4" />
+          <span className="text-xs font-medium">Jump to latest</span>
+        </button>
+      )}
       <div className="p-3 md:p-6 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
         {error && <div className="text-red-400 text-xs md:text-sm mb-2 text-center">{error}</div>}
-        <ChatInput 
+        <ChatInput
           onSendMessage={handleSendMessage} 
           isLoading={isLoading}
         />
