@@ -1,39 +1,25 @@
 # Deployment Guide for Acquisition Assistant
 
-## Overview
-The Acquisition Assistant (Agile Innovation Toolkit) is now configured for automated deployment to GitHub Pages.
+This project deploys to **Vercel** from the `main` branch. The `vercel.json` file in the repo pins the Vite build settings, SPA routing, and the Node 20 runtime for API routes so production matches local behavior.
 
-## Build Configuration
-- **Build Tool**: Vite
-- **Framework**: React 18 with TypeScript
-- **Styling**: Tailwind CSS (via CDN)
-- **AI Integration**: Google Generative AI (Gemini)
+## One-time Vercel setup
 
-## GitHub Pages Deployment
+1. Create a Vercel project pointing at this repository.
+2. Set the environment variable `ANTHROPIC_API_KEY` in the project settings (Production + Preview).
+3. Confirm the project is configured to deploy from the `main` branch with **Build Command** `npm run build` and **Output Directory** `dist` (these are declared in `vercel.json`).
 
-### Automatic Deployment
-The application automatically deploys to GitHub Pages when you push to the `main` branch.
+## How to deploy
 
-### Setup Steps
+- Push to `main`. Vercel will build with `npm ci && npm run build` and publish `dist/` plus the `/api` functions.
+- For a manual redeploy when Vercel appears “stuck,” run from your workstation:
+  ```bash
+  npm install -g vercel
+  vercel pull --yes --environment=production  # ensures local config matches the project
+  vercel --prod --force                       # forces a fresh production build from the current commit
+  ```
+- If you need to redeploy a specific commit, use the Vercel dashboard’s “Redeploy” on that commit.
 
-1. **Enable GitHub Pages**:
-   - Go to your repository settings
-   - Navigate to Pages section
-   - Under "Build and deployment":
-     - Source: GitHub Actions
-
-2. **Configure API Key**:
-   - Go to repository Settings → Secrets and variables → Actions
-   - Add a new repository secret:
-     - Name: `VITE_GEMINI_API_KEY`
-     - Value: Your Google Gemini API key
-
-3. **Deploy**:
-   - Push to main branch (already done!)
-   - GitHub Actions will automatically build and deploy
-   - Your site will be available at: `https://jonbmost.github.io/Acquisition-Assistant/`
-
-## Local Development
+## Local development
 
 ### Prerequisites
 - Node.js 20+ and npm
@@ -43,86 +29,41 @@ The application automatically deploys to GitHub Pages when you push to the `main
 npm install
 ```
 
-### Development Server
+### Development server
 ```bash
 npm run dev
 ```
-This starts a local development server at `http://localhost:5173`
+Runs at `http://localhost:5173`.
 
-### Build Locally
+### Build locally
 ```bash
 npm run build
 ```
-Output will be in the `dist` folder.
+Outputs to `dist/` (matches Vercel).
 
-### Preview Production Build
+### Preview production build
 ```bash
 npm run preview
 ```
 
-## Environment Variables
+## Environment variables
 
 Create a `.env` file in the root directory (not tracked in git):
 ```
-VITE_GEMINI_API_KEY=your_api_key_here
+ANTHROPIC_API_KEY=your_api_key_here
 ```
 
-## Manual Deployment (Alternative)
+## Troubleshooting deployments
 
-If you prefer to deploy manually using gh-pages:
-```bash
-npm run deploy
+- **Vercel didn’t update after a push**: check the Vercel build logs for the commit. If the build was skipped or cached, run `vercel --prod --force` from the repo root to trigger a clean build.
+- **SPA routes 404 on refresh**: the `routes` in `vercel.json` rewrite everything except `/api/*` to `index.html`, so ensure that file was built and uploaded (run `npm run build` locally to verify).
+- **API runtime issues**: API functions target Node 20 via `vercel.json`. If you see runtime mismatches, confirm the project settings don’t override the runtime.
+
+## Repository structure (high level)
 ```
-This builds and pushes the `dist` folder to the `gh-pages` branch.
-
-## Repository Structure
+├── api/                     # Serverless functions for chat APIs
+├── knowledge-base/          # Example knowledge base docs
+├── src root (*.tsx, .ts)    # React + Vite app source
+├── vercel.json              # Vercel build + routing configuration
+└── package.json             # Scripts and dependencies
 ```
-├── .github/
-│   └── workflows/
-│       └── deploy.yml        # GitHub Actions workflow
-├── dist/                      # Build output (generated)
-├── node_modules/              # Dependencies (generated)
-├── App.tsx                    # Main application component
-├── ChatWindow.tsx             # Chat interface
-├── ChatMessage.tsx            # Message display
-├── ChatInput.tsx              # Message input
-├── Sidebar.tsx                # Knowledge base sidebar
-├── Header.tsx                 # Application header
-├── icons.tsx                  # Icon components
-├── types.ts                   # TypeScript types
-├── constants.ts               # Application constants
-├── index.html                 # HTML entry point
-├── index.tsx                  # React entry point
-├── vite.config.ts             # Vite configuration
-├── tsconfig.json              # TypeScript config
-├── package.json               # Dependencies & scripts
-└── .gitignore                 # Git ignore rules
-```
-
-## Troubleshooting
-
-### Build Fails
-- Ensure all dependencies are installed: `npm ci`
-- Check for TypeScript errors: `npx tsc --noEmit`
-
-### Deployment Fails
-- Verify GitHub Pages is enabled in repository settings
-- Check that the `VITE_GEMINI_API_KEY` secret is set
-- Review GitHub Actions logs in the Actions tab
-
-### API Key Issues
-- Ensure your Gemini API key is valid
-- The app will work without an API key but AI features will be limited
-- For production, always use repository secrets, never commit API keys
-
-## Next Steps
-
-1. Monitor the GitHub Actions workflow: https://github.com/jonbmost/Acquisition-Assistant/actions
-2. Once deployed, visit: https://jonbmost.github.io/Acquisition-Assistant/
-3. Add your Gemini API key in repository secrets if not already done
-
-## Notes
-
-- The base URL is configured for `/Acquisition-Assistant/` to match the GitHub Pages path
-- Static assets are bundled and optimized during build
-- The application uses localStorage for chat history and knowledge base persistence
