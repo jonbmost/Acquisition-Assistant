@@ -60,7 +60,7 @@ ANTHROPIC_API_KEY=your_api_key_here
 - **Build/install failures on Vercel**: ensure the project is using Node 24 (package.json `engines.node` and `.nvmrc`). Re-run a failed build from the dashboard after confirming Vercel is honoring the repo’s `npm ci` + `npm run build` commands.
 - **SPA routes 404 on refresh**: the `routes` in `vercel.json` rewrite everything except `/api/*` to `index.html`, so ensure that file was built and uploaded (run `npm run build` locally to verify).
 - **API runtime issues**: API functions target Node 24 via `vercel.json`. If you see runtime mismatches, confirm the project settings don’t override the runtime.
-- **Anthropic API errors**: make sure `ANTHROPIC_API_KEY` is set in Vercel and that the model name is valid (`claude-4`).
+- **Anthropic API errors**: make sure `ANTHROPIC_API_KEY` is set in Vercel and that the model name is valid (`claude-sonnet-4-20250514`).
 
 ## Repository structure (high level)
 ```

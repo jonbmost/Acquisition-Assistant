@@ -1,10 +1,10 @@
 # Acquisition-Assistant
 
-An intelligent procurement assistant to support federal acquisition teams. Powered by Anthropic Claude 4.
+An intelligent procurement assistant to support federal acquisition teams. Powered by Anthropic Claude Sonnet 4 (2025-05-14).
 
 ## Features
 
-- **Claude-Powered Guidance**: Uses Anthropic Claude 4 for procurement assistance
+- **Claude-Powered Guidance**: Uses Anthropic `claude-sonnet-4-20250514` for procurement assistance
 - **Knowledge Base**: Upload and manage custom documents
 - **Persistent Storage**: Chat history and documents saved locally
 - **Streaming Responses**: Real-time AI responses
