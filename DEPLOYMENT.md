@@ -55,9 +55,11 @@ ANTHROPIC_API_KEY=your_api_key_here
 
 ## Troubleshooting deployments
 
+- **GitHub PR shows conflicts (e.g., README.md, DEPLOYMENT.md) and deployments fail**: pull the latest `main`, merge it locally, resolve the conflicts, and push the merged result. Conflicts stop Vercel from deploying because the PR cannot be built until it is mergeable.
 - **Vercel didn’t update after a push**: check the Vercel build logs for the commit. If the build was skipped or cached, run `vercel --prod --force` from the repo root to trigger a clean build.
 - **SPA routes 404 on refresh**: the `routes` in `vercel.json` rewrite everything except `/api/*` to `index.html`, so ensure that file was built and uploaded (run `npm run build` locally to verify).
 - **API runtime issues**: API functions target Node 20 via `vercel.json`. If you see runtime mismatches, confirm the project settings don’t override the runtime.
+- **Anthropic API errors**: make sure `ANTHROPIC_API_KEY` is set in Vercel and that the model name is valid (`claude-3-5-sonnet-20240620`).
 
 ## Repository structure (high level)
 ```
