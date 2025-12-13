@@ -2,7 +2,8 @@
 // This is a Vercel serverless function that handles MCP integration
 
 export const config = {
-  runtime: 'nodejs20.x',
+  // Vercel accepts only "nodejs"/"edge" values here; Node 20 is enforced via project settings/engines
+  runtime: 'nodejs',
   maxDuration: 60
 };
 
