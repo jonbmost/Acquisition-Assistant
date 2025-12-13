@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import ChatWindow from './ChatWindow';
+import StrategyPage from './StrategyPage';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
 import { loadRepositoryKnowledgeBase } from './knowledgeBaseLoader';
@@ -11,6 +12,7 @@ const KNOWLEDGE_BASE_STORAGE_KEY = 'ait-knowledge-base';
 const App: React.FC = () => {
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeDocument[]>([]);
   const [isLoadingRepo, setIsLoadingRepo] = useState(true);
+  const [route, setRoute] = useState(() => window.location.pathname);
 
   // Load knowledge base from repository and localStorage on initial render
   useEffect(() => {
@@ -42,6 +44,12 @@ const App: React.FC = () => {
     };
 
     loadKnowledgeBase();
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => setRoute(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   // Save only user-uploaded documents to localStorage (not repo docs)
@@ -84,11 +92,23 @@ const App: React.FC = () => {
     setKnowledgeBase(prev => prev.filter(doc => doc.id !== docId));
   };
 
+  const handleNavigate = (path: string) => {
+    if (path === route) return;
+    window.history.pushState({}, '', path);
+    setRoute(path);
+  };
+
+  if (route.startsWith('/strategy')) {
+    return (
+      <StrategyPage currentRoute={route} onNavigate={handleNavigate} />
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 font-sans">
-      <Header />
+      <Header currentRoute={route} onNavigate={handleNavigate} />
       <main className="flex-1 overflow-hidden">
-        <ChatWindow 
+        <ChatWindow
           knowledgeBase={knowledgeBase}
         />
       </main>
