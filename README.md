@@ -18,6 +18,8 @@ An intelligent procurement assistant to support federal acquisition teams. Power
    - `ANTHROPIC_API_KEY` - Create in the Anthropic console (server-side only)
 5. Run the app: `npm run dev`
 
+> Use **Node 20+**. Production builds on Vercel use `npm ci` followed by `npm run build`, matching this setup.
+
 ## Usage
 
 - Select your preferred AI model from the dropdown
