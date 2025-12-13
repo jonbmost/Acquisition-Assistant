@@ -1,9 +1,10 @@
 // api/chat-with-mcp.js
 // This is a Vercel serverless function that handles MCP integration
 
+// Explicitly declare the supported runtime; node version is enforced via engines/project settings
+export const runtime = 'nodejs';
+
 export const config = {
-  // Vercel accepts only "nodejs"/"edge" values here; Node 20 is enforced via project settings/engines
-  runtime: 'nodejs',
   maxDuration: 60
 };
 
