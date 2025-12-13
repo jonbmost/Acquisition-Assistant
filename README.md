@@ -20,6 +20,10 @@ An intelligent procurement assistant to support federal acquisition teams. Power
 
 > Use **Node 20.19**. Production builds on Vercel use `npm ci` followed by `npm run build`, matching this setup. Run `nvm use` in the repo root to pick up the pinned Node version from `.nvmrc`; set the same version (20.19) in the Vercel project settings if it differs.
 
+## Troubleshooting
+
+- **"API key not configured"**: Set `ANTHROPIC_API_KEY` in your local `.env` file or in Vercel Project Settings → Environment Variables (Production and Preview), then redeploy.
+
 ## Usage
 
 - Select your preferred AI model from the dropdown

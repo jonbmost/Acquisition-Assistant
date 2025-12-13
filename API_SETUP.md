@@ -37,3 +37,4 @@ ANTHROPIC_API_KEY=sk-ant-api03-abc123xyz...
 - API keys are **not** exposed in client-side code.
 - The `.env` file is in `.gitignore` and should never be committed.
 - For production deployments, configure `ANTHROPIC_API_KEY` in your platform's dashboard and redeploy.
+- If you receive "API key not configured", double-check that `ANTHROPIC_API_KEY` is set for the active environment (e.g., Vercel Production/Preview) and redeploy so the functions can read it.

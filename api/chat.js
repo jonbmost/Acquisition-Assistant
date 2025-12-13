@@ -18,10 +18,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid request: messages required' });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    
+    const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      return res.status(500).json({
+        error: 'API key not configured',
+        hint:
+          'Add ANTHROPIC_API_KEY in your environment (local .env or Vercel project settings for Production and Preview) and redeploy.'
+      });
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {

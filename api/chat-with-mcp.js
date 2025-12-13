@@ -22,9 +22,13 @@ export default async function handler(req, res) {
     }
 
     // Get API key from environment variable
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      return res.status(500).json({
+        error: 'API key not configured',
+        hint:
+          'Add ANTHROPIC_API_KEY in your environment (local .env or Vercel project settings for Production and Preview) and redeploy.'
+      });
     }
 
     // Call Anthropic API with MCP configuration
