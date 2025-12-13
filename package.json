@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run build:mcp",
+    "build:mcp": "tsc mcp-server.ts --outDir dist --module nodenext --moduleResolution nodenext --target es2022 --skipLibCheck",
+    "mcp": "node dist/mcp-server.js",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@modelcontextprotocol/sdk": "^1.24.3",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
     "jspdf": "^3.0.4",
