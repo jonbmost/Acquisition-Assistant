@@ -2,6 +2,7 @@
 // This is a Vercel serverless function that handles MCP integration
 
 export const config = {
+  // Vercel accepts only "nodejs"/"edge" values here; Node 20 is enforced via project settings/engines
   runtime: 'nodejs',
   maxDuration: 60
 };
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 4096,
         system: system || 'You are a helpful AI assistant.',
         messages: messages,

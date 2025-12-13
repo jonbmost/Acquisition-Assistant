@@ -29,7 +29,7 @@ ANTHROPIC_API_KEY=sk-ant-api03-abc123xyz...
 
 ## Using the Model
 
-- The app uses Claude Sonnet 4 for all responses.
+- The app uses Claude 3.5 Sonnet (20240620) for all responses.
 - Requests are proxied through `/api/chat` and `/api/chat-with-mcp`, which both read `process.env.ANTHROPIC_API_KEY`.
 
 ## Notes
