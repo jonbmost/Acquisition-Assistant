@@ -1,5 +1,4 @@
 // api/chat.js
-// Vercel serverless function with MCP integration
 export const config = {
   runtime: 'nodejs',
   maxDuration: 60
@@ -23,7 +22,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    // Call Anthropic API with MCP configuration
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -34,17 +32,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
-        system: system || 'You are a helpful AI assistant for federal acquisition.',
-        messages: messages,
-        
-        // MCP server configuration
-        mcp_servers: [
-          {
-            type: 'url',
-            url: 'https://aitbot-tau.vercel.app/sse',
-            name: 'federal-acquisition'
-          }
-        ]
+        system: system || 'You are a helpful federal acquisition assistant with expertise in FAR, agile acquisitions, and government contracting.',
+        messages: messages
       })
     });
 
