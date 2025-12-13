@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-4',
         max_tokens: 4096,
         system: system || 'You are a helpful federal acquisition assistant with expertise in FAR, agile acquisitions, and government contracting.',
         messages: messages
