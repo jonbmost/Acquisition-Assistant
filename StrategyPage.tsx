@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { jsPDF } from 'jspdf';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { saveAs } from 'file-saver';
 import Header from './Header';
 
 type StrategyPageProps = {
@@ -31,6 +33,7 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const isSubmitDisabled = useMemo(() => !description.trim() || isLoading, [description, isLoading]);
 
@@ -78,34 +81,69 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
   };
 
   const handleDownloadPdf = () => {
-    if (!result.trim()) return;
+    if (!result.trim() || isExporting) return;
 
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 40;
     const contentWidth = pageWidth - margin * 2;
+    const lineHeight = 16;
 
     const lines = doc.splitTextToSize(result, contentWidth);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(12);
-    doc.text(lines, margin, margin);
+
+    let y = margin;
+    lines.forEach((line: string) => {
+      if (y > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(line, margin, y);
+      y += lineHeight;
+    });
+
     doc.save('acquisition-strategy.pdf');
   };
 
-  const handleDownloadDoc = () => {
-    if (!result.trim()) return;
+  const handleDownloadDoc = async () => {
+    if (!result.trim() || isExporting) return;
 
-    const safeContent = result.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Acquisition Strategy</title></head><body style="font-family: Arial, sans-serif; white-space: pre-wrap;">${safeContent}</body></html>`;
-    const blob = new Blob([html], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
+    setIsExporting(true);
 
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'acquisition-strategy.doc';
-    link.click();
+    try {
+      const paragraphs = result
+        .trim()
+        .split(/\n\n+/)
+        .map((block) => {
+          const lines = block.split(/\n/);
+          const runs = lines.flatMap((line, index) => {
+            const run = new TextRun({ text: line.trimEnd() });
+            const needsBreak = index < lines.length - 1;
+            return needsBreak ? [run, new TextRun({ text: '', break: 1 })] : [run];
+          });
 
-    URL.revokeObjectURL(url);
+          return new Paragraph({
+            children: runs.length ? runs : [new TextRun(' ')],
+            spacing: { after: 200 },
+          });
+        });
+
+      const document = new Document({
+        sections: [
+          {
+            properties: {},
+            children: paragraphs.length ? paragraphs : [new Paragraph('No response received.')],
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(document);
+      saveAs(blob, 'acquisition-strategy.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -165,7 +203,7 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
               <button
                 type="button"
                 onClick={handleDownloadPdf}
-                disabled={!result.trim()}
+                disabled={!result.trim() || isExporting}
                 className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-cyan-500 text-gray-900 font-semibold hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 Download PDF
@@ -173,10 +211,10 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
               <button
                 type="button"
                 onClick={handleDownloadDoc}
-                disabled={!result.trim()}
+                disabled={!result.trim() || isExporting}
                 className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gray-200 text-gray-900 font-semibold hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
-                Download DOC
+                Download DOCX
               </button>
               <p className="text-sm text-gray-400">Available after a strategy response is generated.</p>
             </div>
