@@ -39,6 +39,17 @@ function resolveModelName() {
   return configured || DEFAULT_MODEL;
 }
 
+function sanitizeMessages(rawMessages) {
+  if (!Array.isArray(rawMessages)) return [];
+
+  return rawMessages
+    .filter((msg) => typeof msg?.content === 'string' && msg.content.trim().length > 0)
+    .map((msg) => ({
+      ...msg,
+      content: msg.content.trim(),
+    }));
+}
+
 export default async function handler(req, res) {
   // Only accept POST requests
   if (req.method !== 'POST') {
@@ -50,6 +61,12 @@ export default async function handler(req, res) {
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Invalid request: messages required' });
+    }
+
+    const sanitizedMessages = sanitizeMessages(messages);
+
+    if (sanitizedMessages.length === 0) {
+      return res.status(400).json({ error: 'Invalid request: messages must include non-empty content' });
     }
 
     const { apiKey, activeEnv } = resolveApiKey();
@@ -88,7 +105,7 @@ export default async function handler(req, res) {
         model,
         max_tokens: 4096,
         system: system || 'You are a helpful AI assistant.',
-        messages: messages,
+        messages: sanitizedMessages,
         
         // MCP server configuration - works server-side
         mcp_servers: [
