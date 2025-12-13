@@ -4,7 +4,7 @@ import { SYSTEM_INSTRUCTION, MAX_DOCUMENT_LENGTH, AI_MODELS, type AIModel } from
 import type { Message, KnowledgeDocument } from './types';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
-import { DownloadIcon, ArrowDownIcon } from './icons';
+import { DownloadIcon } from './icons';
 
 interface ChatWindowProps {
   knowledgeBase: KnowledgeDocument[];
@@ -18,9 +18,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [selectedModel, setSelectedModel] = useState<AIModel>('claude');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const hasUserInteracted = useRef(false);
 
   // Load chat history from localStorage on startup
@@ -78,18 +76,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     if (!hasUserInteracted.current) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
-
-  // Check scroll position to show/hide scroll button
-  const handleScroll = useCallback(() => {
-    if (!messagesContainerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-    setShowScrollButton(!isNearBottom);
-  }, []);
-
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
 
   const handleSendMessage = useCallback(async (inputText: string, file: File | null) => {
     if (isLoading) return;
@@ -230,11 +216,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
         </div>
       </div>
 
-      <div 
-        ref={messagesContainerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 relative"
-      >
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6">
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
@@ -246,17 +228,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
            </div>
         )}
         <div ref={messagesEndRef} />
-        
-        {/* Scroll to Bottom Button */}
-        {showScrollButton && (
-          <button
-            onClick={scrollToBottom}
-            className="fixed bottom-24 right-6 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110 z-10"
-            aria-label="Scroll to bottom"
-          >
-            <ArrowDownIcon className="h-5 w-5" />
-          </button>
-        )}
       </div>
       <div className="p-3 md:p-6 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
         {error && <div className="text-red-400 text-xs md:text-sm mb-2 text-center">{error}</div>}
