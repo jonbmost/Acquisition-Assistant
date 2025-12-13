@@ -6,7 +6,7 @@ This project deploys to **Vercel** from the `main` branch. The `vercel.json` fil
 
 1. Create a Vercel project pointing at this repository.
 2. Set the environment variable `ANTHROPIC_API_KEY` in the project settings (Production + Preview).
-3. Confirm the project is configured to deploy from the `main` branch with **Install Command** `npm ci`, **Build Command** `npm run build`, and **Output Directory** `dist` (declared in `vercel.json`).
+3. Confirm the project is configured to deploy from the `main` branch with **Install Command** `npm ci`, **Build Command** `npm run build`, and **Output Directory** `dist` (declared in `vercel.json`). The repository now includes a `.nvmrc` and `package.json` `engines.node` entry so Vercel picks Node 20 during both build and runtime.
 
 ## How to deploy
 
@@ -22,7 +22,7 @@ This project deploys to **Vercel** from the `main` branch. The `vercel.json` fil
 ## Local development
 
 ### Prerequisites
-- Node.js 20+ and npm
+- Node.js 20+ and npm (run `nvm use` in the repo root to auto-select the pinned Node 20 version from `.nvmrc`)
 
 ### Setup
 ```bash
