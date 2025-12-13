@@ -8,6 +8,25 @@ export const config = {
   maxDuration: 60
 };
 
+function resolveApiKey() {
+  const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
+  const candidates = [
+    process.env.ANTHROPIC_API_KEY,
+    activeEnv === 'production' ? process.env.ANTHROPIC_API_KEY_PROD : undefined,
+    activeEnv === 'production' ? process.env.ANTHROPIC_API_KEY_PRODUCTION : undefined,
+    activeEnv === 'preview' ? process.env.ANTHROPIC_API_KEY_PREVIEW : undefined,
+    activeEnv === 'development' ? process.env.ANTHROPIC_API_KEY_DEV : undefined,
+    process.env.ANTHROPIC_API_KEY_DEFAULT
+  ];
+
+  const trimmed = candidates
+    .filter((key) => typeof key === 'string')
+    .map((key) => key.trim())
+    .find((key) => key.length > 0);
+
+  return { apiKey: trimmed || '', activeEnv };
+}
+
 export default async function handler(req, res) {
   // Only accept POST requests
   if (req.method !== 'POST') {
@@ -21,11 +40,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid request: messages required' });
     }
 
-    // Get API key from environment variable
-    const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
-    const apiKey = typeof process.env.ANTHROPIC_API_KEY === 'string'
-      ? process.env.ANTHROPIC_API_KEY.trim()
-      : '';
+    const { apiKey, activeEnv } = resolveApiKey();
 
     if (!apiKey) {
       console.error('ANTHROPIC_API_KEY missing in runtime environment', {
@@ -34,10 +49,16 @@ export default async function handler(req, res) {
         availableKeys: Object.keys(process.env || {}).filter(key => key.includes('ANTHROPIC'))
       });
 
+      const envSpecific = activeEnv === 'preview'
+        ? ' (or ANTHROPIC_API_KEY_PREVIEW for Preview deployments)'
+        : activeEnv === 'production'
+          ? ' (or ANTHROPIC_API_KEY_PROD)'
+          : '';
+
       return res.status(500).json({
         error: 'API key not configured',
         hint:
-          `Add ANTHROPIC_API_KEY to the ${activeEnv} environment (local .env or Vercel Project Settings → Environment Variables) and redeploy.`
+          `Add ANTHROPIC_API_KEY${envSpecific} to the ${activeEnv} environment (local .env or Vercel Project Settings → Environment Variables) and redeploy.`
       });
     }
 
