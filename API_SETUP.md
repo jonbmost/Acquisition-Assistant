@@ -19,6 +19,7 @@ API keys should remain server-side. The app's serverless routes read `process.en
 3. **For Deployment (Vercel, GitHub Actions, etc.):**
    - Open your deployment platform's environment variables settings
    - Add a variable named `ANTHROPIC_API_KEY` with your key value
+   - On Vercel, set it for the specific environment you deploy (Production and Preview are separate scopes)
    - Redeploy your application so the serverless functions can read the new key
 
 ## Example .env file
@@ -37,4 +38,4 @@ ANTHROPIC_API_KEY=sk-ant-api03-abc123xyz...
 - API keys are **not** exposed in client-side code.
 - The `.env` file is in `.gitignore` and should never be committed.
 - For production deployments, configure `ANTHROPIC_API_KEY` in your platform's dashboard and redeploy.
-- If you receive "API key not configured", double-check that `ANTHROPIC_API_KEY` is set for the environment you are deploying (local `.env`, Vercel Production, or Vercel Preview). After updating, redeploy so the serverless functions pick it up.
+- If you receive "API key not configured", double-check that `ANTHROPIC_API_KEY` is set for the environment you are deploying (local `.env`, Vercel Production, or Vercel Preview). After updating, **redeploy** so the serverless functions pick it up. For Vercel, also confirm the key is set under the correct environment tab (Production vs Preview).

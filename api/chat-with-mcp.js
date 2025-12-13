@@ -22,9 +22,18 @@ export default async function handler(req, res) {
     }
 
     // Get API key from environment variable
-    const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
     const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
+    const apiKey = typeof process.env.ANTHROPIC_API_KEY === 'string'
+      ? process.env.ANTHROPIC_API_KEY.trim()
+      : '';
+
     if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY missing in runtime environment', {
+        vercelEnv: process.env.VERCEL_ENV,
+        nodeEnv: process.env.NODE_ENV,
+        availableKeys: Object.keys(process.env || {}).filter(key => key.includes('ANTHROPIC'))
+      });
+
       return res.status(500).json({
         error: 'API key not configured',
         hint:
