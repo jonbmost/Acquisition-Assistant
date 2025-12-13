@@ -1,8 +1,10 @@
 // api/chat-with-mcp.js
 // This is a Vercel serverless function that handles MCP integration
 
+// Explicitly declare the supported runtime; node version is enforced via engines/project settings
+export const runtime = 'nodejs';
+
 export const config = {
-  runtime: 'nodejs',
   maxDuration: 60
 };
 
@@ -20,9 +22,23 @@ export default async function handler(req, res) {
     }
 
     // Get API key from environment variable
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
+    const apiKey = typeof process.env.ANTHROPIC_API_KEY === 'string'
+      ? process.env.ANTHROPIC_API_KEY.trim()
+      : '';
+
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      console.error('ANTHROPIC_API_KEY missing in runtime environment', {
+        vercelEnv: process.env.VERCEL_ENV,
+        nodeEnv: process.env.NODE_ENV,
+        availableKeys: Object.keys(process.env || {}).filter(key => key.includes('ANTHROPIC'))
+      });
+
+      return res.status(500).json({
+        error: 'API key not configured',
+        hint:
+          `Add ANTHROPIC_API_KEY to the ${activeEnv} environment (local .env or Vercel Project Settings → Environment Variables) and redeploy.`
+      });
     }
 
     // Call Anthropic API with MCP configuration
@@ -34,7 +50,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-4',
         max_tokens: 4096,
         system: system || 'You are a helpful AI assistant.',
         messages: messages,
@@ -52,10 +68,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      const upstreamMessage =
+        (errorData && (errorData.error?.message || errorData.error)) ||
+        response.statusText ||
+        'Anthropic API request failed';
+
       console.error('Anthropic API error:', errorData);
-      return res.status(response.status).json({ 
-        error: 'API request failed',
-        details: errorData 
+      return res.status(response.status).json({
+        error: upstreamMessage,
+        details: errorData
       });
     }
 
