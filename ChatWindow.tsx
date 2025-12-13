@@ -160,7 +160,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
       
       // Provide helpful context for common errors
       if (errorMessage.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your API key is set in environment variables (VITE_ANTHROPIC_API_KEY) and try again.';
+        errorMessage = 'Network error. Please check your API key is set in environment variables (ANTHROPIC_API_KEY) and try again.';
       }
       
       setError(errorMessage);
