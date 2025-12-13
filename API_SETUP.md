@@ -33,6 +33,7 @@ ANTHROPIC_API_KEY=sk-ant-api03-abc123xyz...
 
 - The app uses `claude-sonnet-4-20250514` for all responses.
 - Requests are proxied through `/api/chat` and `/api/chat-with-mcp`, which both read `process.env.ANTHROPIC_API_KEY` (or environment-specific overrides like `ANTHROPIC_API_KEY_PREVIEW` / `ANTHROPIC_API_KEY_PROD`).
+- If you previously set a custom `ANTHROPIC_MODEL` (for example `claude-4`), remove it or set it to `claude-sonnet-4-20250514`. The serverless functions also remap `claude-4`/`claude-4.0` aliases to the current Sonnet 4 model at runtime.
 
 ## Notes
 

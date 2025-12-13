@@ -8,6 +8,8 @@ export const config = {
   maxDuration: 60
 };
 
+const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+
 function resolveApiKey() {
   const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
   const candidates = [
@@ -25,6 +27,16 @@ function resolveApiKey() {
     .find((key) => key.length > 0);
 
   return { apiKey: trimmed || '', activeEnv };
+}
+
+function resolveModelName() {
+  const configured = (process.env.ANTHROPIC_MODEL || '').trim();
+
+  if (configured === 'claude-4' || configured === 'claude-4.0') {
+    return DEFAULT_MODEL;
+  }
+
+  return configured || DEFAULT_MODEL;
 }
 
 export default async function handler(req, res) {
@@ -62,6 +74,8 @@ export default async function handler(req, res) {
       });
     }
 
+    const model = resolveModelName();
+
     // Call Anthropic API with MCP configuration
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -71,7 +85,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-       model: 'claude-sonnet-4-20250514'
+        model,
         max_tokens: 4096,
         system: system || 'You are a helpful AI assistant.',
         messages: messages,
@@ -94,7 +108,7 @@ export default async function handler(req, res) {
         response.statusText ||
         'Anthropic API request failed';
 
-      console.error('Anthropic API error:', errorData);
+      console.error('Anthropic API error:', { errorData, modelUsed: model });
       return res.status(response.status).json({
         error: upstreamMessage,
         details: errorData

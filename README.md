@@ -23,6 +23,7 @@ An intelligent procurement assistant to support federal acquisition teams. Power
 ## Troubleshooting
 
 - **"API key not configured"**: Verify the key exists for the exact Vercel environment you're deploying (Production **and** Preview are independent). You can set a global `ANTHROPIC_API_KEY` or add environment-specific overrides (`ANTHROPIC_API_KEY_PREVIEW`, `ANTHROPIC_API_KEY_PROD`). After adding or editing the variable, redeploy so the serverless functions pick up the change.
+- **Model errors mentioning `claude-4`**: Clear any custom `ANTHROPIC_MODEL` value in your environment variables. The serverless routes default to `claude-sonnet-4-20250514` and will remap legacy aliases (`claude-4`, `claude-4.0`) automatically on deploy.
 
 ## Usage
 
