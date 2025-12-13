@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { jsPDF } from 'jspdf';
 import Header from './Header';
 
 type StrategyPageProps = {
@@ -76,6 +77,37 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
     }
   };
 
+  const handleDownloadPdf = () => {
+    if (!result.trim()) return;
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    const contentWidth = pageWidth - margin * 2;
+
+    const lines = doc.splitTextToSize(result, contentWidth);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text(lines, margin, margin);
+    doc.save('acquisition-strategy.pdf');
+  };
+
+  const handleDownloadDoc = () => {
+    if (!result.trim()) return;
+
+    const safeContent = result.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Acquisition Strategy</title></head><body style="font-family: Arial, sans-serif; white-space: pre-wrap;">${safeContent}</body></html>`;
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'acquisition-strategy.doc';
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <Header currentRoute={currentRoute} onNavigate={onNavigate} />
@@ -128,6 +160,25 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
               {isLoading && !error && (
                 <p className="text-cyan-300 animate-pulse">Generating strategy…</p>
               )}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={!result.trim()}
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-cyan-500 text-gray-900 font-semibold hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Download PDF
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadDoc}
+                disabled={!result.trim()}
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gray-200 text-gray-900 font-semibold hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Download DOC
+              </button>
+              <p className="text-sm text-gray-400">Available after a strategy response is generated.</p>
             </div>
           </div>
         </div>
