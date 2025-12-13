@@ -18,7 +18,7 @@ An intelligent procurement assistant to support federal acquisition teams. Power
    - `ANTHROPIC_API_KEY` - Create in the Anthropic console (server-side only)
 5. Run the app: `npm run dev`
 
-> Use **Node 20.18**. Production builds on Vercel use `npm ci` followed by `npm run build`, matching this setup. Run `nvm use` in the repo root to pick up the pinned Node version from `.nvmrc`; set the same version (20.18) in the Vercel project settings if it differs.
+> Use **Node 20.19**. Production builds on Vercel use `npm ci` followed by `npm run build`, matching this setup. Run `nvm use` in the repo root to pick up the pinned Node version from `.nvmrc`; set the same version (20.19) in the Vercel project settings if it differs.
 
 ## Usage
 
