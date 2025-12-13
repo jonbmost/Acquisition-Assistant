@@ -17,6 +17,11 @@ This project deploys to **Vercel** from the `main` branch. The `vercel.json` fil
   vercel pull --yes --environment=production  # ensures local config matches the project
   vercel --prod --force                       # forces a fresh production build from the current commit
   ```
+- To confirm a deployment reached production, run:
+  ```bash
+  vercel deployments --prod --limit 1
+  ```
+  Then compare the `commit` shown to `git rev-parse HEAD`. If they match, the current code is live. If not, force a redeploy or trigger one from the Vercel dashboard.
 - If you need to redeploy a specific commit, use the Vercel dashboard’s “Redeploy” on that commit.
 
 ## Local development

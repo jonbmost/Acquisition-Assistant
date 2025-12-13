@@ -37,6 +37,7 @@ An intelligent procurement assistant to support federal acquisition teams. Power
 - Push to `main` to deploy automatically.
 - If GitHub shows merge conflicts on your PR, resolve them locally and push the merge before Vercel can build; once fixed, trigger a fresh deploy if needed with `vercel --prod --force`.
 - If Vercel ever looks stuck on an old build, run `vercel --prod --force` from the repo root to trigger a fresh production build using the `vercel.json` settings.
+- To confirm the latest commit is live, run `vercel deployments --prod --limit 1` from this repo root (or check the Vercel dashboard) and verify the deployment’s Git commit matches `git rev-parse HEAD`.
 
 ## What to Do Next
 
