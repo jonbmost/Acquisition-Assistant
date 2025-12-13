@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "An intelligent procurement assistant to support federal acquisition teams",
   "type": "module",
+  "engines": {
+    "node": "20.18.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run build:mcp",
