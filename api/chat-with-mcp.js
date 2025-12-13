@@ -1,8 +1,10 @@
 // api/chat-with-mcp.js
 // This is a Vercel serverless function that handles MCP integration
 
+// Explicitly declare the supported runtime; node version is enforced via engines/project settings
+export const runtime = 'nodejs';
+
 export const config = {
-  runtime: 'nodejs',
   maxDuration: 60
 };
 
@@ -20,9 +22,13 @@ export default async function handler(req, res) {
     }
 
     // Get API key from environment variable
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      return res.status(500).json({
+        error: 'API key not configured',
+        hint:
+          'Add ANTHROPIC_API_KEY in your environment (local .env or Vercel project settings for Production and Preview) and redeploy.'
+      });
     }
 
     // Call Anthropic API with MCP configuration
@@ -34,7 +40,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 4096,
         system: system || 'You are a helpful AI assistant.',
         messages: messages,
@@ -52,10 +58,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      const upstreamMessage =
+        (errorData && (errorData.error?.message || errorData.error)) ||
+        response.statusText ||
+        'Anthropic API request failed';
+
       console.error('Anthropic API error:', errorData);
-      return res.status(response.status).json({ 
-        error: 'API request failed',
-        details: errorData 
+      return res.status(response.status).json({
+        error: upstreamMessage,
+        details: errorData
       });
     }
 
