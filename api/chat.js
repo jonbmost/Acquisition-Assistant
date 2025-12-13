@@ -1,8 +1,42 @@
 // api/chat.js
+// Explicitly declare the supported runtime; node version is enforced via engines/project settings
+export const runtime = 'nodejs';
+
 export const config = {
-  runtime: 'nodejs',
   maxDuration: 60
 };
+
+const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+
+function resolveApiKey() {
+  const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
+  const candidates = [
+    process.env.ANTHROPIC_API_KEY,
+    activeEnv === 'production' ? process.env.ANTHROPIC_API_KEY_PROD : undefined,
+    activeEnv === 'production' ? process.env.ANTHROPIC_API_KEY_PRODUCTION : undefined,
+    activeEnv === 'preview' ? process.env.ANTHROPIC_API_KEY_PREVIEW : undefined,
+    activeEnv === 'development' ? process.env.ANTHROPIC_API_KEY_DEV : undefined,
+    process.env.ANTHROPIC_API_KEY_DEFAULT
+  ];
+
+  const trimmed = candidates
+    .filter((key) => typeof key === 'string')
+    .map((key) => key.trim())
+    .find((key) => key.length > 0);
+
+  return { apiKey: trimmed || '', activeEnv };
+}
+
+function resolveModelName() {
+  const configured = (process.env.ANTHROPIC_MODEL || '').trim();
+
+  // Map old aliases to the current Claude Sonnet 4 identifier so legacy env vars do not break requests
+  if (configured === 'claude-4' || configured === 'claude-4.0') {
+    return DEFAULT_MODEL;
+  }
+
+  return configured || DEFAULT_MODEL;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,16 +45,34 @@ export default async function handler(req, res) {
 
   try {
     const { messages, system } = req.body;
-    
+
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Invalid request: messages required' });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    
+    const { apiKey, activeEnv } = resolveApiKey();
+
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      console.error('ANTHROPIC_API_KEY missing in runtime environment', {
+        vercelEnv: process.env.VERCEL_ENV,
+        nodeEnv: process.env.NODE_ENV,
+        availableKeys: Object.keys(process.env || {}).filter(key => key.includes('ANTHROPIC'))
+      });
+
+      const envSpecific = activeEnv === 'preview'
+        ? ' (or ANTHROPIC_API_KEY_PREVIEW for Preview deployments)'
+        : activeEnv === 'production'
+          ? ' (or ANTHROPIC_API_KEY_PROD)'
+          : '';
+
+      return res.status(500).json({
+        error: 'API key not configured',
+        hint:
+          `Add ANTHROPIC_API_KEY${envSpecific} to the ${activeEnv} environment (local .env or Vercel Project Settings → Environment Variables) and redeploy.`
+      });
     }
+
+    const model = resolveModelName();
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -30,7 +82,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model,
         max_tokens: 4096,
         system: system || 'You are a helpful federal acquisition assistant with expertise in FAR, agile acquisitions, and government contracting.',
         messages: messages
@@ -39,10 +91,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Anthropic API error:', errorData);
-      return res.status(response.status).json({ 
-        error: 'API request failed',
-        details: errorData 
+      const upstreamMessage =
+        (errorData && (errorData.error?.message || errorData.error)) ||
+        response.statusText ||
+        'Anthropic API request failed';
+
+      console.error('Anthropic API error:', { errorData, modelUsed: model });
+      return res.status(response.status).json({
+        error: upstreamMessage,
+        details: errorData
       });
     }
 
