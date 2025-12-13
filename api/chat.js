@@ -19,12 +19,13 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+    const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
 
     if (!apiKey) {
       return res.status(500).json({
         error: 'API key not configured',
         hint:
-          'Add ANTHROPIC_API_KEY in your environment (local .env or Vercel project settings for Production and Preview) and redeploy.'
+          `Add ANTHROPIC_API_KEY to the ${activeEnv} environment (local .env or Vercel Project Settings → Environment Variables) and redeploy.`
       });
     }
 

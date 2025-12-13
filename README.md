@@ -22,7 +22,7 @@ An intelligent procurement assistant to support federal acquisition teams. Power
 
 ## Troubleshooting
 
-- **"API key not configured"**: Set `ANTHROPIC_API_KEY` in your local `.env` file or in Vercel Project Settings → Environment Variables (Production and Preview), then redeploy.
+- **"API key not configured"**: Set `ANTHROPIC_API_KEY` in your local `.env` file or in Vercel Project Settings → Environment Variables for the active environment (Production/Preview), then redeploy so the serverless functions can read it.
 
 ## Usage
 
