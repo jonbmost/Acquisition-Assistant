@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import ChatWindow from './ChatWindow';
 import StrategyPage from './StrategyPage';
+import RequirementDocsPage from './RequirementDocsPage';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
 import { loadRepositoryKnowledgeBase } from './knowledgeBaseLoader';
@@ -101,6 +102,12 @@ const App: React.FC = () => {
   if (route.startsWith('/strategy')) {
     return (
       <StrategyPage currentRoute={route} onNavigate={handleNavigate} />
+    );
+  }
+
+  if (route.startsWith('/requirement-docs')) {
+    return (
+      <RequirementDocsPage currentRoute={route} onNavigate={handleNavigate} />
     );
   }
 
