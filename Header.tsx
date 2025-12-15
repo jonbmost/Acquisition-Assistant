@@ -94,6 +94,13 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
                 >
                   SOP Creation
                 </a>
+                <a
+                  href="/stakeholder-analysis"
+                  onClick={handleNav('/stakeholder-analysis')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/stakeholder-analysis') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Stakeholder Analysis
+                </a>
               </div>
             )}
           </div>
