@@ -65,7 +65,7 @@ const SopCreationPage: React.FC<SopCreationPageProps> = ({ currentRoute = '/sop-
               content: `Create a standard operating procedure for the following process: ${trimmed}`,
             },
           ],
-          system: 'You are a federal operations assistant who drafts clear, step-by-step SOPs.',
+          system: 'You are a federal operations assistant who drafts clear, step-by-step SOPs that embed agile acquisition processes (timeboxed iterations, backlog refinement, demo-based acceptance).',
         }),
       });
 

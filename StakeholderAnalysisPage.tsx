@@ -62,7 +62,7 @@ const StakeholderAnalysisPage: React.FC<StakeholderAnalysisPageProps> = ({ curre
               content: `Generate a stakeholder analysis for: ${trimmed}`,
             },
           ],
-          system: 'You are a federal acquisition assistant who crafts clear stakeholder analyses.',
+          system: 'You are a federal acquisition assistant who crafts clear stakeholder analyses and spotlights roles needed for agile acquisition (e.g., product ownership, user champions, security) and rapid feedback cycles.',
         }),
       });
 
