@@ -8,14 +8,6 @@ interface RegsPolicyPageProps {
 
 const RECOMMENDED_RESOURCES = [
   {
-    label: 'FAR Part 12',
-    url: 'https://acquisition.gov/far/part-12',
-  },
-  {
-    label: 'DFARS 212.102',
-    url: 'https://www.acquisition.gov/dfars/part-212-acquisition-commercial-products-and-commercial-services#DFARS-212.102',
-  },
-  {
     label: "Leading Agile Acquisition (User’s Book)",
     url: 'https://joinmost.org/agile-book',
   },
