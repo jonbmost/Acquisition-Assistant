@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "An intelligent procurement assistant to support federal acquisition teams",
   "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run build:mcp",
@@ -14,7 +17,6 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@modelcontextprotocol/sdk": "^1.24.3",
-    "docx": "^9.5.1",
     "file-saver": "^2.0.5",
     "jspdf": "^3.0.4",
     "openai": "^6.10.0",

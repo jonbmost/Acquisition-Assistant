@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -9,6 +10,9 @@ export default defineConfig({
     sourcemap: true,
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js']
+    extensions: ['.tsx', '.ts', '.jsx', '.js'],
+    alias: {
+      'html-docx-js/dist/html-docx': path.resolve(__dirname, './htmlDocxStub')
+    }
   }
 });
