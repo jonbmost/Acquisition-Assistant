@@ -6,7 +6,7 @@ export const config = {
 
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
 const SLIDE_PROMPT =
-  'Turn the following mission notes into a formatted presentation with 5–10 PowerPoint-style slides. Each slide should include a clear title and bullet points. Format the response as structured JSON like [{title: "...", bullets: ["...", "..."]}, ...].';
+  'Turn the following mission notes into a formatted presentation with 5–10 PowerPoint-style slides. Each slide should include a clear title, bullet points, and a slide-level design. Return structured JSON shaped like [{title: "...", bullets: ["...", "..."], themeColor: "#0ea5e9", accentColor: "#0f172a", icon: "🚀"}, ...]. Provide contrasting hex colors for themeColor and accentColor that work on dark backgrounds. Do not include any text outside the JSON array.';
 
 function resolveApiKey() {
   const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
@@ -72,13 +72,18 @@ function parseSlides(rawText) {
 
   if (!Array.isArray(parsed)) return [];
 
+  const isHexColor = (value) => typeof value === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim());
+
   return parsed
     .filter((item) => item && typeof item === 'object')
     .map((item) => ({
       title: typeof item.title === 'string' ? item.title.trim() : 'Slide',
       bullets: Array.isArray(item.bullets)
         ? item.bullets.filter((b) => typeof b === 'string' && b.trim()).map((b) => b.trim())
-        : []
+        : [],
+      themeColor: isHexColor(item.themeColor) ? item.themeColor.trim() : '#0f172a',
+      accentColor: isHexColor(item.accentColor) ? item.accentColor.trim() : '#22d3ee',
+      icon: typeof item.icon === 'string' && item.icon.trim() ? item.icon.trim() : ''
     }));
 }
 
