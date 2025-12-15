@@ -55,6 +55,13 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
           >
             Requirement Docs
           </a>
+          <a
+            href="/market-research"
+            onClick={handleNav('/market-research')}
+            className={`${linkBase} ${currentRoute.startsWith('/market-research') ? active : inactive}`}
+          >
+            Market Research
+          </a>
         </nav>
       </div>
     </header>
