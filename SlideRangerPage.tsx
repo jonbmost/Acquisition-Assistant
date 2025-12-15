@@ -165,13 +165,25 @@ const SlideRangerPage: React.FC<SlideRangerPageProps> = ({ currentRoute = '/slid
       );
       const pptx = new (PptxGenJS as any)();
 
+      const sanitize = (value: string) => {
+        const container = document.createElement('div');
+        container.innerHTML = value;
+        return (container.textContent || container.innerText || '').trim();
+      };
+
       slides.forEach((slide) => {
         const s = pptx.addSlide();
         s.addText(slide.title || 'Slide', { x: 0.5, y: 0.4, fontSize: 18, bold: true, color: '1b9ed8' });
 
         if (slide.bullets?.length) {
+          const bulletLines = slide.bullets
+            .map((b) => sanitize(formatTextAsHtml(b)))
+            .filter((text) => text.length > 0);
+
+          if (!bulletLines.length) return;
+
           s.addText(
-            slide.bullets.map((b) => `• ${b}`).join('\n'),
+            bulletLines.join('\n'),
             { x: 0.7, y: 1.1, fontSize: 14, color: '1f2937', bullet: true, lineSpacingMultiple: 1.2 }
           );
         }
