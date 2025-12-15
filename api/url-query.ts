@@ -5,7 +5,7 @@ export const config = {
   maxDuration: 60,
 };
 
-const MODEL_NAME = 'claude-3-sonnet-20240229';
+const MODEL_NAME = 'claude-sonnet-4-20250514';
 
 function resolveApiKey() {
   const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
