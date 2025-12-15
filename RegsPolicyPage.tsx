@@ -19,6 +19,30 @@ const RECOMMENDED_RESOURCES = [
     label: "Leading Agile Acquisition (User’s Book)",
     url: 'https://joinmost.org/agile-book',
   },
+  {
+    label: 'TechFAR Hub',
+    url: 'https://techfarhub.usds.gov/',
+  },
+  {
+    label: 'FAR Overhaul',
+    url: 'https://www.acquisition.gov/far-overhaul',
+  },
+  {
+    label: 'DFARS',
+    url: 'https://www.acquisition.gov/dfars',
+  },
+  {
+    label: 'Foreign Affairs Manual (FAM)',
+    url: 'https://fam.state.gov/',
+  },
+  {
+    label: 'FAR Index',
+    url: 'https://www.acquisition.gov/browse/index/far',
+  },
+  {
+    label: 'AgileAcquisitions.com',
+    url: 'https://www.agileacquisitions.com/',
+  },
 ];
 
 function sanitizeAnswerText(text: string): string {
