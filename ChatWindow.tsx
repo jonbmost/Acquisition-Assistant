@@ -13,6 +13,14 @@ interface ChatWindowProps {
 const CHAT_HISTORY_STORAGE_KEY = 'ait-chat-history';
 const MODEL_SELECTION_STORAGE_KEY = 'ait-selected-model';
 
+const createInitialMessages = (): Message[] => ([
+  {
+    id: 'initial-message',
+    role: 'model',
+    text: 'Hello! I am your intelligent procurement assistant. How can I help you plan your agile acquisition today? You can ask me to draft a document, provide guidance on FAR, or help with evaluation strategies.',
+  },
+]);
+
 const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>('claude');
@@ -47,11 +55,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     }
 
     if (loadedMessages.length === 0) {
-      loadedMessages.push({
-        id: 'initial-message',
-        role: 'model',
-        text: 'Hello! I am your intelligent procurement assistant. How can I help you plan your agile acquisition today? You can ask me to draft a document, provide guidance on FAR, or help with evaluation strategies.',
-      });
+      loadedMessages = createInitialMessages();
     }
     setMessages(loadedMessages);
   }, []);
@@ -228,6 +232,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
     URL.revokeObjectURL(url);
   };
 
+  const clearChatHistory = () => {
+    localStorage.removeItem(CHAT_HISTORY_STORAGE_KEY);
+    setMessages(createInitialMessages());
+    setError(null);
+    hasUserInteracted.current = false;
+    setShowScrollToEnd(false);
+  };
+
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto relative">
       {/* Model Selector */}
@@ -280,17 +292,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ knowledgeBase }) => {
           isLoading={isLoading}
         />
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mt-3">
-            <p className="text-xs text-gray-500 text-center">
-                AIT is an AI assistant. Responses may be inaccurate. Verify important information.
-            </p>
+          <p className="text-xs text-gray-500 text-center">
+              AIT is an AI assistant. Responses may be inaccurate. Verify important information.
+          </p>
+          <div className="flex items-center gap-3">
             <button
-                onClick={downloadChatHistory}
-                className="flex items-center text-xs text-gray-400 hover:text-cyan-400 transition-colors duration-200 whitespace-nowrap"
-                aria-label="Download chat history"
+              onClick={clearChatHistory}
+              className="flex items-center text-xs text-gray-400 hover:text-red-300 transition-colors duration-200 whitespace-nowrap border border-gray-700 rounded px-3 py-1"
+              aria-label="Clear chat history"
             >
-                <DownloadIcon className="h-4 w-4 mr-1" />
-                Download Chat
+              Clear Conversation
             </button>
+            <button
+              onClick={downloadChatHistory}
+              className="flex items-center text-xs text-gray-400 hover:text-cyan-400 transition-colors duration-200 whitespace-nowrap"
+              aria-label="Download chat history"
+            >
+              <DownloadIcon className="h-4 w-4 mr-1" />
+              Download Chat
+            </button>
+          </div>
         </div>
       </div>
     </div>
