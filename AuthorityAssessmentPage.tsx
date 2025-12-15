@@ -119,12 +119,15 @@ const AuthorityAssessmentPage: React.FC<AuthorityAssessmentPageProps> = ({ curre
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-    handleDocxDownload(resultHtml, 'authority-assessment.docx');
-    setIsExporting(false);
+    try {
+      await handleDocxDownload(resultHtml, 'authority-assessment.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

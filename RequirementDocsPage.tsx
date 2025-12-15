@@ -119,12 +119,15 @@ const RequirementDocsPage: React.FC<RequirementDocsPageProps> = ({ currentRoute 
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-    handleDocxDownload(resultHtml, 'requirements-document.docx');
-    setIsExporting(false);
+    try {
+      await handleDocxDownload(resultHtml, 'requirements-document.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

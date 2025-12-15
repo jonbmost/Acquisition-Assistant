@@ -110,12 +110,15 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
     doc.save('acquisition-strategy.pdf');
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-    handleDocxDownload(resultHtml, 'acquisition-strategy.docx');
-    setIsExporting(false);
+    try {
+      await handleDocxDownload(resultHtml, 'acquisition-strategy.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

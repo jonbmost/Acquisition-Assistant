@@ -122,12 +122,15 @@ const SopCreationPage: React.FC<SopCreationPageProps> = ({ currentRoute = '/sop-
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-    handleDocxDownload(resultHtml, 'standard-operating-procedure.docx');
-    setIsExporting(false);
+    try {
+      await handleDocxDownload(resultHtml, 'standard-operating-procedure.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

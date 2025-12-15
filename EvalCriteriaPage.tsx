@@ -119,12 +119,15 @@ const EvalCriteriaPage: React.FC<EvalCriteriaPageProps> = ({ currentRoute = '/ev
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-    handleDocxDownload(resultHtml, 'evaluation-criteria.docx');
-    setIsExporting(false);
+    try {
+      await handleDocxDownload(resultHtml, 'evaluation-criteria.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

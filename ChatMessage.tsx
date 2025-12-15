@@ -91,9 +91,9 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
     setShowDownloadMenu(false);
   };
 
-  const downloadAsDOCX = () => {
+  const downloadAsDOCX = async () => {
     const html = formatTextAsHtml(message.text, 'Acquisition Assistant Response');
-    handleDocxDownload(html, `AIT_Response_${message.id}.docx`);
+    await handleDocxDownload(html, `AIT_Response_${message.id}.docx`);
     setShowDownloadMenu(false);
   };
 

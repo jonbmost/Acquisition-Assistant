@@ -119,12 +119,15 @@ const MarketResearchPage: React.FC<MarketResearchPageProps> = ({ currentRoute = 
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-    handleDocxDownload(resultHtml, 'market-research-summary.docx');
-    setIsExporting(false);
+    try {
+      await handleDocxDownload(resultHtml, 'market-research-summary.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

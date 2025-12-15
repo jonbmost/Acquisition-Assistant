@@ -1,4 +1,4 @@
-import htmlDocx from 'html-docx-js/dist/html-docx';
+import { Document, HeadingLevel, Packer, Paragraph } from './vendor/docx/index.mjs';
 import { saveAs } from 'file-saver';
 
 const escapeHtml = (value: string) =>
@@ -63,10 +63,86 @@ export const formatTextAsHtml = (text: string, heading?: string): string => {
   return blocks.join('');
 };
 
-export const handleDocxDownload = (htmlContent: string, fileName: string) => {
+const headingMap: Record<string, HeadingLevel> = {
+  H1: HeadingLevel.HEADING_1,
+  H2: HeadingLevel.HEADING_2,
+  H3: HeadingLevel.HEADING_3,
+  H4: HeadingLevel.HEADING_4,
+  H5: HeadingLevel.HEADING_5,
+  H6: HeadingLevel.HEADING_6
+};
+
+export const handleDocxDownload = async (htmlContent: string, fileName: string) => {
   if (!htmlContent.trim()) return;
 
-  const wrappedHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Arial, sans-serif; line-height:1.6;} h1,h2,h3,h4,h5,h6{margin:0 0 12px;} p,ul{margin:0 0 12px;} ul{padding-left:20px;}</style></head><body>${htmlContent}</body></html>`;
-  const blob = htmlDocx.asBlob(wrappedHtml);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${htmlContent}</div>`, 'text/html');
+
+  const paragraphs: Paragraph[] = [];
+
+  const processElement = (el: Element) => {
+    const tag = el.tagName;
+    const text = el.textContent?.trim();
+
+    if (tag === 'UL') {
+      Array.from(el.children).forEach((child) => {
+        if (child.tagName === 'LI') {
+          const liText = child.textContent?.trim();
+          if (liText) {
+            paragraphs.push(
+              new Paragraph({
+                text: liText,
+                bullet: { level: 0 },
+                spacing: { after: 120 }
+              })
+            );
+          }
+        }
+      });
+      return;
+    }
+
+    if (headingMap[tag] && text) {
+      paragraphs.push(
+        new Paragraph({
+          text,
+          heading: headingMap[tag],
+          spacing: { after: 160 }
+        })
+      );
+      return;
+    }
+
+    if (tag === 'P' && text) {
+      paragraphs.push(
+        new Paragraph({
+          text,
+          spacing: { after: 160 }
+        })
+      );
+      return;
+    }
+
+    Array.from(el.children).forEach((child) => processElement(child));
+  };
+
+  Array.from(doc.body.children).forEach((child) => processElement(child));
+
+  const document = new Document({
+    sections: [
+      {
+        children: paragraphs.length
+          ? paragraphs
+          : [
+              new Paragraph({
+                text: 'No content provided.',
+                spacing: { after: 160 }
+              })
+            ]
+      }
+    ]
+  });
+
+  const blob = await Packer.toBlob(document);
   saveAs(blob, fileName);
 };

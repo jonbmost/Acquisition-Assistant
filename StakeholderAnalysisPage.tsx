@@ -119,12 +119,15 @@ const StakeholderAnalysisPage: React.FC<StakeholderAnalysisPageProps> = ({ curre
     }
   };
 
-  const handleDownloadDoc = () => {
+  const handleDownloadDoc = async () => {
     if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-    handleDocxDownload(resultHtml, 'stakeholder-analysis.docx');
-    setIsExporting(false);
+    try {
+      await handleDocxDownload(resultHtml, 'stakeholder-analysis.docx');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
