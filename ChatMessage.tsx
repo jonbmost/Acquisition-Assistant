@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import type { Message } from './types';
 import { UserIcon, BotIcon, SourceIcon, DownloadIcon } from './icons';
 import { jsPDF } from 'jspdf';
-import { Document, Paragraph, Packer, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
+import { handleDocxDownload, formatTextAsHtml } from './outputUtils';
 
 // Simple markdown-to-JSX parser
 const SimpleMarkdown: React.FC<{ text: string }> = ({ text }) => {
@@ -92,31 +92,8 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
   };
 
   const downloadAsDOCX = async () => {
-    // Split text into paragraphs
-    const paragraphs = message.text.split('\n').map(line => 
-      new Paragraph({
-        children: [new TextRun(line || ' ')],
-        spacing: { after: 200 }
-      })
-    );
-
-    // Create document
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [new TextRun({ text: 'Acquisition Assistant Response', bold: true, size: 32 })],
-            spacing: { after: 400 }
-          }),
-          ...paragraphs
-        ]
-      }]
-    });
-
-    // Generate and download
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `AIT_Response_${message.id}.docx`);
+    const html = formatTextAsHtml(message.text, 'Acquisition Assistant Response');
+    await handleDocxDownload(html, `AIT_Response_${message.id}.docx`);
     setShowDownloadMenu(false);
   };
 
