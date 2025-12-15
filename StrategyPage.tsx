@@ -59,7 +59,7 @@ const StrategyPage: React.FC<StrategyPageProps> = ({ currentRoute = '/strategy',
           messages: [
             { role: 'user', content: trimmed }
           ],
-          system: 'You are a federal acquisition strategy assistant. Provide actionable guidance tailored to the user request.'
+          system: 'You are a federal acquisition strategy assistant. Provide actionable guidance tailored to the user request, prioritizing agile acquisition principles like modular contracting, iterative delivery, and demo-driven oversight.'
         })
       });
 
