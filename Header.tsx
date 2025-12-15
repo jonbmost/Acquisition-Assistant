@@ -108,6 +108,13 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
                 >
                   Authority Assessment
                 </a>
+                <a
+                  href="/slide-ranger"
+                  onClick={handleNav('/slide-ranger')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/slide-ranger') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Slide Ranger
+                </a>
               </div>
             )}
           </div>

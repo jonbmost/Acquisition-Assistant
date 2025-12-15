@@ -9,6 +9,7 @@ import EvalCriteriaPage from './EvalCriteriaPage';
 import SopCreationPage from './SopCreationPage';
 import StakeholderAnalysisPage from './StakeholderAnalysisPage';
 import AuthorityAssessmentPage from './AuthorityAssessmentPage';
+import SlideRangerPage from './SlideRangerPage';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
 import { loadRepositoryKnowledgeBase } from './knowledgeBaseLoader';
@@ -143,6 +144,12 @@ const App: React.FC = () => {
   if (route.startsWith('/authority-assessment')) {
     return (
       <AuthorityAssessmentPage currentRoute={route} onNavigate={handleNavigate} />
+    );
+  }
+
+  if (route.startsWith('/slide-ranger')) {
+    return (
+      <SlideRangerPage currentRoute={route} onNavigate={handleNavigate} />
     );
   }
 
