@@ -45,11 +45,11 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
             Chat
           </a>
           <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen((open) => !open)}
-              className={`${linkBase} inline-flex items-center gap-2 ${isMenuOpen ? active : inactive}`}
-              aria-expanded={isMenuOpen}
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen((open) => !open)}
+                className={`${linkBase} inline-flex items-center gap-2 ${isMenuOpen ? active : inactive}`}
+                aria-expanded={isMenuOpen}
               aria-label="Open workspaces menu"
             >
               Workspaces
@@ -100,6 +100,13 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
                   className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/stakeholder-analysis') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
                 >
                   Stakeholder Analysis
+                </a>
+                <a
+                  href="/authority-assessment"
+                  onClick={handleNav('/authority-assessment')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/authority-assessment') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Authority Assessment
                 </a>
               </div>
             )}

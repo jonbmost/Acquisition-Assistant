@@ -8,6 +8,7 @@ import MarketResearchPage from './MarketResearchPage';
 import EvalCriteriaPage from './EvalCriteriaPage';
 import SopCreationPage from './SopCreationPage';
 import StakeholderAnalysisPage from './StakeholderAnalysisPage';
+import AuthorityAssessmentPage from './AuthorityAssessmentPage';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
 import { loadRepositoryKnowledgeBase } from './knowledgeBaseLoader';
@@ -136,6 +137,12 @@ const App: React.FC = () => {
   if (route.startsWith('/stakeholder-analysis')) {
     return (
       <StakeholderAnalysisPage currentRoute={route} onNavigate={handleNavigate} />
+    );
+  }
+
+  if (route.startsWith('/authority-assessment')) {
+    return (
+      <AuthorityAssessmentPage currentRoute={route} onNavigate={handleNavigate} />
     );
   }
 
