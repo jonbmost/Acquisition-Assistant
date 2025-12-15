@@ -1,4 +1,4 @@
-import { Document, HeadingLevel, Packer, Paragraph } from './vendor/docx/index.mjs';
+import { Document, HeadingLevel, Packer, Paragraph, TextRun } from './vendor/docx/index.mjs';
 import { saveAs } from 'file-saver';
 
 const escapeHtml = (value: string) =>
@@ -8,6 +8,22 @@ const escapeHtml = (value: string) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+
+const formatInlineSegments = (value: string) => {
+  const parts = value.split(/(\*\*[^*]+\*\*)/g);
+
+  return parts
+    .map((segment) => {
+      const boldMatch = segment.match(/^\*\*(.+)\*\*$/);
+
+      if (boldMatch) {
+        return `<strong>${escapeHtml(boldMatch[1])}</strong>`;
+      }
+
+      return escapeHtml(segment);
+    })
+    .join('');
+};
 
 export const formatTextAsHtml = (text: string, heading?: string): string => {
   const trimmed = text?.trim();
@@ -44,18 +60,18 @@ export const formatTextAsHtml = (text: string, heading?: string): string => {
       flushList();
       const level = Math.min(6, headingMatch[1].length);
       const headingText = headingMatch[2];
-      blocks.push(`<h${level}>${escapeHtml(headingText)}</h${level}>`);
+      blocks.push(`<h${level}>${formatInlineSegments(headingText)}</h${level}>`);
       return;
     }
 
     if (/^[-*]\s+/.test(current)) {
       const content = current.replace(/^[-*]\s+/, '');
-      listItems.push(`<li>${escapeHtml(content)}</li>`);
+      listItems.push(`<li>${formatInlineSegments(content)}</li>`);
       return;
     }
 
     flushList();
-    blocks.push(`<p>${escapeHtml(current)}</p>`);
+    blocks.push(`<p>${formatInlineSegments(current)}</p>`);
   });
 
   flushList();
@@ -80,18 +96,42 @@ export const handleDocxDownload = async (htmlContent: string, fileName: string) 
 
   const paragraphs: Paragraph[] = [];
 
+  const gatherRuns = (node: Node, style: { bold?: boolean; italics?: boolean } = {}): TextRun[] => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent ?? '';
+
+      if (!text) return [];
+
+      return [new TextRun({ text, bold: style.bold, italics: style.italics })];
+    }
+
+    if (!(node instanceof Element)) {
+      return [];
+    }
+
+    if (node.tagName === 'BR') {
+      return [new TextRun({ text: '\n', bold: style.bold, italics: style.italics })];
+    }
+
+    const nextStyle = {
+      bold: style.bold || node.tagName === 'STRONG' || node.tagName === 'B',
+      italics: style.italics || node.tagName === 'EM' || node.tagName === 'I'
+    };
+
+    return Array.from(node.childNodes).flatMap((child) => gatherRuns(child, nextStyle));
+  };
+
   const processElement = (el: Element) => {
     const tag = el.tagName;
-    const text = el.textContent?.trim();
 
     if (tag === 'UL') {
       Array.from(el.children).forEach((child) => {
         if (child.tagName === 'LI') {
-          const liText = child.textContent?.trim();
-          if (liText) {
+          const runs = gatherRuns(child);
+          if (runs.length) {
             paragraphs.push(
               new Paragraph({
-                text: liText,
+                children: runs,
                 bullet: { level: 0 },
                 spacing: { after: 120 }
               })
@@ -102,24 +142,30 @@ export const handleDocxDownload = async (htmlContent: string, fileName: string) 
       return;
     }
 
-    if (headingMap[tag] && text) {
-      paragraphs.push(
-        new Paragraph({
-          text,
-          heading: headingMap[tag],
-          spacing: { after: 160 }
-        })
-      );
+    if (headingMap[tag]) {
+      const runs = gatherRuns(el);
+      if (runs.length) {
+        paragraphs.push(
+          new Paragraph({
+            children: runs,
+            heading: headingMap[tag],
+            spacing: { after: 160 }
+          })
+        );
+      }
       return;
     }
 
-    if (tag === 'P' && text) {
-      paragraphs.push(
-        new Paragraph({
-          text,
-          spacing: { after: 160 }
-        })
-      );
+    if (tag === 'P') {
+      const runs = gatherRuns(el);
+      if (runs.length) {
+        paragraphs.push(
+          new Paragraph({
+            children: runs,
+            spacing: { after: 160 }
+          })
+        );
+      }
       return;
     }
 
