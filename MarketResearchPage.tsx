@@ -62,7 +62,7 @@ const MarketResearchPage: React.FC<MarketResearchPageProps> = ({ currentRoute = 
               content: `Generate a market research summary for: ${trimmed}`,
             },
           ],
-          system: 'You are a federal acquisition assistant who produces concise, actionable market research summaries.',
+          system: 'You are a federal acquisition assistant who produces concise, actionable market research summaries that highlight agile acquisition pathways, modular contracting options, and vendors with iterative delivery maturity.',
         }),
       });
 

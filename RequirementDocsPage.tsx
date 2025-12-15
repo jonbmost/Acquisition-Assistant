@@ -62,7 +62,7 @@ const RequirementDocsPage: React.FC<RequirementDocsPageProps> = ({ currentRoute 
               content: `Draft a requirements document for the following: ${trimmed}`,
             },
           ],
-          system: 'You are a federal acquisition assistant who drafts clear, actionable requirements documents.',
+          system: 'You are a federal acquisition assistant who drafts clear, actionable requirements documents with a preference for agile acquisition principles such as modular scope, acceptance criteria, and iterative delivery.',
         }),
       });
 
