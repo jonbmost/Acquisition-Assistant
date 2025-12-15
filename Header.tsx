@@ -116,6 +116,13 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
                   Slide Ranger
                 </a>
                 <a
+                  href="/document-analysis"
+                  onClick={handleNav('/document-analysis')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/document-analysis') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Document Analysis
+                </a>
+                <a
                   href="/url-query"
                   onClick={handleNav('/url-query')}
                   className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/url-query') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
