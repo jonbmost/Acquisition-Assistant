@@ -42,6 +42,13 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
             Chat
           </a>
           <a
+            href="/eval-criteria"
+            onClick={handleNav('/eval-criteria')}
+            className={`${linkBase} ${currentRoute.startsWith('/eval-criteria') ? active : inactive}`}
+          >
+            Eval Criteria
+          </a>
+          <a
             href="/strategy"
             onClick={handleNav('/strategy')}
             className={`${linkBase} ${currentRoute.startsWith('/strategy') ? active : inactive}`}
