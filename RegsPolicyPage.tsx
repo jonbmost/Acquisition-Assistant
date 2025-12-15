@@ -21,6 +21,14 @@ const RECOMMENDED_RESOURCES = [
   },
 ];
 
+function sanitizeAnswerText(text: string): string {
+  if (typeof text !== 'string') return '';
+
+  const stripped = text.replace(/<invoke name="mcp">[\s\S]*?<\/invoke>/gi, '').trim();
+
+  return stripped.length > 0 ? stripped : '';
+}
+
 function extractAnswer(data: any): string {
   if (Array.isArray(data?.content)) {
     const combined = data.content
@@ -29,12 +37,18 @@ function extractAnswer(data: any): string {
       .join('\n\n');
 
     if (combined.trim().length > 0) {
-      return combined.trim();
+      const sanitized = sanitizeAnswerText(combined);
+      if (sanitized.length > 0) {
+        return sanitized;
+      }
     }
   }
 
   if (typeof data?.answer === 'string' && data.answer.trim().length > 0) {
-    return data.answer.trim();
+    const sanitized = sanitizeAnswerText(data.answer);
+    if (sanitized.length > 0) {
+      return sanitized;
+    }
   }
 
   if (typeof data?.error === 'string' && data.error.trim().length > 0) {

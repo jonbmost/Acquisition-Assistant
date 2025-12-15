@@ -7,6 +7,14 @@ export const config = {
 
 const MODEL_NAME = 'claude-sonnet-4-20250514';
 
+function sanitizeAnswerText(text: string): string {
+  if (typeof text !== 'string') return '';
+
+  const stripped = text.replace(/<invoke name="mcp">[\s\S]*?<\/invoke>/gi, '').trim();
+
+  return stripped.length > 0 ? stripped : '';
+}
+
 function resolveApiKey() {
   const activeEnv = process.env.VERCEL_ENV || process.env.NODE_ENV || 'production';
   const candidates = [
@@ -34,12 +42,18 @@ function extractAnswer(data: any): string {
       .join('\n\n');
 
     if (merged.trim().length > 0) {
-      return merged.trim();
+      const sanitized = sanitizeAnswerText(merged);
+      if (sanitized.length > 0) {
+        return sanitized;
+      }
     }
   }
 
   if (typeof data?.error === 'string' && data.error.trim().length > 0) {
-    return data.error.trim();
+    const sanitized = sanitizeAnswerText(data.error);
+    if (sanitized.length > 0) {
+      return sanitized;
+    }
   }
 
   return '';
