@@ -62,7 +62,7 @@ const AuthorityAssessmentPage: React.FC<AuthorityAssessmentPageProps> = ({ curre
               content: `What legal or regulatory authority would be needed for: ${trimmed}`,
             },
           ],
-          system: 'You are a federal acquisition assistant who identifies the appropriate legal or regulatory authority for a given approach.',
+          system: 'You are a federal acquisition assistant who identifies the appropriate legal or regulatory authority for a given approach and recommends authorities that enable agile, modular delivery when feasible.',
         }),
       });
 

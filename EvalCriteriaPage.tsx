@@ -62,7 +62,7 @@ const EvalCriteriaPage: React.FC<EvalCriteriaPageProps> = ({ currentRoute = '/ev
               content: `Draft evaluation criteria for this acquisition context: ${trimmed}`,
             },
           ],
-          system: 'You are a federal acquisition assistant who crafts clear, measurable evaluation criteria.',
+          system: 'You are a federal acquisition assistant who crafts clear, measurable evaluation criteria that reward agile delivery practices, working software demos, and iterative risk reduction.',
         }),
       });
 
