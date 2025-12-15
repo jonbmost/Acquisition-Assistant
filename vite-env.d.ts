@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_ANTHROPIC_API_KEY: string
+  // No client-exposed environment variables. Serverless routes read process.env.ANTHROPIC_API_KEY.
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv
+  readonly env: ImportMetaEnv;
 }
