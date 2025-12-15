@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { jsPDF } from 'jspdf';
-import { Document, Packer, Paragraph, TextRun } from 'docx';
-import { saveAs } from 'file-saver';
+import { handleDocxDownload, formatTextAsHtml } from './outputUtils';
 import Header from './Header';
 
 interface MarketResearchPageProps {
@@ -31,6 +30,7 @@ function extractResponseText(data: any): string {
 const MarketResearchPage: React.FC<MarketResearchPageProps> = ({ currentRoute = '/market-research', onNavigate }) => {
   const [description, setDescription] = useState('');
   const [result, setResult] = useState('');
+  const [resultHtml, setResultHtml] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -49,6 +49,7 @@ const MarketResearchPage: React.FC<MarketResearchPageProps> = ({ currentRoute = 
     setIsLoading(true);
     setError('');
     setResult('');
+    setResultHtml('');
 
     try {
       const response = await fetch('/api/mcp', {
@@ -75,7 +76,9 @@ const MarketResearchPage: React.FC<MarketResearchPageProps> = ({ currentRoute = 
         return;
       }
 
-      setResult(extractResponseText(data));
+      const text = extractResponseText(data);
+      setResult(text);
+      setResultHtml(formatTextAsHtml(text, 'Market Research Summary'));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unexpected error.');
     } finally {
@@ -116,43 +119,12 @@ const MarketResearchPage: React.FC<MarketResearchPageProps> = ({ currentRoute = 
     }
   };
 
-  const handleDownloadDoc = async () => {
-    if (!result.trim() || isExporting) return;
+  const handleDownloadDoc = () => {
+    if (!resultHtml.trim() || isExporting) return;
 
     setIsExporting(true);
-
-    try {
-      const paragraphs = result
-        .trim()
-        .split(/\n\n+/)
-        .map((block) => {
-          const lines = block.split(/\n/);
-          const runs = lines.flatMap((line, index) => {
-            const run = new TextRun({ text: line.trimEnd() });
-            const needsBreak = index < lines.length - 1;
-            return needsBreak ? [run, new TextRun({ text: '', break: 1 })] : [run];
-          });
-
-          return new Paragraph({
-            children: runs.length ? runs : [new TextRun(' ')],
-            spacing: { after: 200 },
-          });
-        });
-
-      const document = new Document({
-        sections: [
-          {
-            properties: {},
-            children: paragraphs.length ? paragraphs : [new Paragraph('No response received.')],
-          },
-        ],
-      });
-
-      const blob = await Packer.toBlob(document);
-      saveAs(blob, 'market-research-summary.docx');
-    } finally {
-      setIsExporting(false);
-    }
+    handleDocxDownload(resultHtml, 'market-research-summary.docx');
+    setIsExporting(false);
   };
 
   return (
@@ -196,8 +168,8 @@ const MarketResearchPage: React.FC<MarketResearchPageProps> = ({ currentRoute = 
             <h3 className="text-lg font-semibold text-gray-100 mb-3">Generated summary</h3>
             <div className="min-h-[120px] rounded-lg border border-gray-700 bg-gray-900/60 p-4">
               {error && <p className="text-red-400 whitespace-pre-line">{error}</p>}
-              {!error && result && (
-                <pre className="whitespace-pre-wrap text-gray-100 font-sans leading-relaxed">{result}</pre>
+              {!error && resultHtml && (
+                <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: resultHtml }} />
               )}
               {!error && !result && !isLoading && (
                 <p className="text-gray-500">Your market research summary will appear here.</p>
