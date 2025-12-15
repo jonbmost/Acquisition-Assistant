@@ -5,9 +5,6 @@ import { formatTextAsHtml } from './outputUtils';
 type Slide = {
   title: string;
   bullets: string[];
-  themeColor: string;
-  accentColor: string;
-  icon?: string;
 };
 
 type SlideRangerPageProps = {
@@ -129,9 +126,6 @@ const SlideRangerPage: React.FC<SlideRangerPageProps> = ({ currentRoute = '/slid
           bullets: Array.isArray(slide?.bullets)
             ? slide.bullets.filter((b: any) => typeof b === 'string' && b.trim()).map((b: string) => b.trim())
             : [],
-          themeColor: typeof slide?.themeColor === 'string' && slide.themeColor.trim() ? slide.themeColor : '#0f172a',
-          accentColor: typeof slide?.accentColor === 'string' && slide.accentColor.trim() ? slide.accentColor : '#22d3ee',
-          icon: typeof slide?.icon === 'string' && slide.icon.trim() ? slide.icon.trim() : ''
         }))
       );
       setInfoMessage('Slides generated successfully.');
@@ -161,14 +155,6 @@ const SlideRangerPage: React.FC<SlideRangerPageProps> = ({ currentRoute = '/slid
     }
   }, [slides.length, isExporting]);
 
-  const normalizeHex = (value: string, fallback: string) => {
-    const cleaned = (value || '').trim();
-    if (/^#?[0-9a-fA-F]{6}$/.test(cleaned) || /^#?[0-9a-fA-F]{3}$/.test(cleaned)) {
-      return cleaned.replace('#', '');
-    }
-    return fallback.replace('#', '');
-  };
-
   const handleDownloadPpt = useCallback(async () => {
     if (!slides.length || isExporting) return;
     setIsExporting(true);
@@ -187,19 +173,7 @@ const SlideRangerPage: React.FC<SlideRangerPageProps> = ({ currentRoute = '/slid
 
       slides.forEach((slide) => {
         const s = pptx.addSlide();
-
-        if (slide.themeColor) {
-          s.background = { color: normalizeHex(slide.themeColor, '0f172a') };
-        }
-
-        const titleText = `${slide.icon ? `${slide.icon} ` : ''}${slide.title || 'Slide'}`;
-        s.addText(titleText, {
-          x: 0.5,
-          y: 0.4,
-          fontSize: 18,
-          bold: true,
-          color: normalizeHex(slide.accentColor, '22d3ee'),
-        });
+        s.addText(slide.title || 'Slide', { x: 0.5, y: 0.4, fontSize: 18, bold: true, color: '1b9ed8' });
 
         if (slide.bullets?.length) {
           const bulletLines = slide.bullets
@@ -208,14 +182,10 @@ const SlideRangerPage: React.FC<SlideRangerPageProps> = ({ currentRoute = '/slid
 
           if (!bulletLines.length) return;
 
-          s.addText(bulletLines.join('\n'), {
-            x: 0.7,
-            y: 1.1,
-            fontSize: 14,
-            color: normalizeHex(slide.accentColor, '22d3ee'),
-            bullet: true,
-            lineSpacingMultiple: 1.2,
-          });
+          s.addText(
+            bulletLines.join('\n'),
+            { x: 0.7, y: 1.1, fontSize: 14, color: '1f2937', bullet: true, lineSpacingMultiple: 1.2 }
+          );
         }
       });
 
@@ -228,28 +198,17 @@ const SlideRangerPage: React.FC<SlideRangerPageProps> = ({ currentRoute = '/slid
   }, [slides, isExporting]);
 
   const renderSlideHtml = (slide: Slide, index: number) => {
-    const theme = slide.themeColor || '#0f172a';
-    const accent = slide.accentColor || '#22d3ee';
-    const header = slide.icon ? `${slide.icon} ${slide.title}` : slide.title;
     return (
-      <div
-        key={index}
-        className="border border-gray-700 rounded-lg p-4 shadow-sm"
-        style={{
-          background: `linear-gradient(135deg, ${theme} 0%, rgba(34,211,238,0.08) 100%)`,
-        }}
-      >
-        <h2 className="text-xl font-bold mb-2" style={{ color: accent }}>
-          {header || 'Untitled slide'}
-        </h2>
+      <div key={index} className="bg-gray-900/70 border border-gray-700 rounded-lg p-4 shadow-sm">
+        <h2 className="text-xl font-bold text-cyan-300 mb-2">{slide.title || 'Untitled slide'}</h2>
         {slide.bullets && slide.bullets.length > 0 ? (
-          <ul className="list-disc list-inside space-y-1" style={{ color: '#e5e7eb' }}>
+          <ul className="list-disc list-inside text-gray-100 space-y-1">
             {slide.bullets.map((bullet, i) => (
-              <li key={i} dangerouslySetInnerHTML={{ __html: formatTextAsHtml(bullet) }} />
+              <li key={i} className="text-gray-100" dangerouslySetInnerHTML={{ __html: formatTextAsHtml(bullet) }} />
             ))}
           </ul>
         ) : (
-          <p className="text-gray-300">No bullet points provided.</p>
+          <p className="text-gray-400">No bullet points provided.</p>
         )}
       </div>
     );
