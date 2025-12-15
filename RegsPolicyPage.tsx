@@ -39,10 +39,6 @@ const RECOMMENDED_RESOURCES = [
     label: 'FAR Index',
     url: 'https://www.acquisition.gov/browse/index/far',
   },
-  {
-    label: 'AgileAcquisitions.com',
-    url: 'https://www.agileacquisitions.com/',
-  },
 ];
 
 function sanitizeAnswerText(text: string): string {

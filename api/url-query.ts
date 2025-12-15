@@ -102,7 +102,8 @@ You have access to the following MCP resource:
 ${mcpUrl}
 
 Use this document as the source of truth to answer the user's question.
-If the question cannot be answered based on the document, say so clearly.`;
+If the question cannot be answered based on the document, say so clearly.
+If a more specific subpage would provide better grounded detail (for example, a particular FAR part, section, or DFARS clause), identify the exact deeper URL and present it as "Suggested URL to copy/paste: <link>" so the user can paste it into the URL field.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
