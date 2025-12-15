@@ -6,6 +6,7 @@ import StrategyPage from './StrategyPage';
 import RequirementDocsPage from './RequirementDocsPage';
 import MarketResearchPage from './MarketResearchPage';
 import EvalCriteriaPage from './EvalCriteriaPage';
+import SopCreationPage from './SopCreationPage';
 import type { KnowledgeDocument } from './types';
 import { MAX_DOCUMENT_LENGTH } from './constants';
 import { loadRepositoryKnowledgeBase } from './knowledgeBaseLoader';
@@ -122,6 +123,12 @@ const App: React.FC = () => {
   if (route.startsWith('/eval-criteria')) {
     return (
       <EvalCriteriaPage currentRoute={route} onNavigate={handleNavigate} />
+    );
+  }
+
+  if (route.startsWith('/sop-creation')) {
+    return (
+      <SopCreationPage currentRoute={route} onNavigate={handleNavigate} />
     );
   }
 

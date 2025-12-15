@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { AitLogoIcon } from './icons';
+import React, { useState } from 'react';
+import { AitLogoIcon, ChevronDownIcon } from './icons';
 
 type HeaderProps = {
   currentRoute?: string;
@@ -8,11 +8,14 @@ type HeaderProps = {
 };
 
 const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const handleNav = (path: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (onNavigate) {
       event.preventDefault();
       onNavigate(path);
     }
+    setIsMenuOpen(false);
   };
 
   const linkBase =
@@ -33,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
           </h1>
         </div>
 
-        <nav className="flex items-center gap-2 text-sm">
+        <nav className="flex items-center gap-3 text-sm relative">
           <a
             href="/"
             onClick={handleNav('/')}
@@ -41,34 +44,59 @@ const Header: React.FC<HeaderProps> = ({ currentRoute = '/', onNavigate }) => {
           >
             Chat
           </a>
-          <a
-            href="/eval-criteria"
-            onClick={handleNav('/eval-criteria')}
-            className={`${linkBase} ${currentRoute.startsWith('/eval-criteria') ? active : inactive}`}
-          >
-            Eval Criteria
-          </a>
-          <a
-            href="/strategy"
-            onClick={handleNav('/strategy')}
-            className={`${linkBase} ${currentRoute.startsWith('/strategy') ? active : inactive}`}
-          >
-            Strategy
-          </a>
-          <a
-            href="/requirement-docs"
-            onClick={handleNav('/requirement-docs')}
-            className={`${linkBase} ${currentRoute.startsWith('/requirement-docs') ? active : inactive}`}
-          >
-            Requirement Docs
-          </a>
-          <a
-            href="/market-research"
-            onClick={handleNav('/market-research')}
-            className={`${linkBase} ${currentRoute.startsWith('/market-research') ? active : inactive}`}
-          >
-            Market Research
-          </a>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              className={`${linkBase} inline-flex items-center gap-2 ${isMenuOpen ? active : inactive}`}
+              aria-expanded={isMenuOpen}
+              aria-label="Open workspaces menu"
+            >
+              Workspaces
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${isMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+              />
+            </button>
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-2 z-20">
+                <a
+                  href="/strategy"
+                  onClick={handleNav('/strategy')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/strategy') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Strategy
+                </a>
+                <a
+                  href="/requirement-docs"
+                  onClick={handleNav('/requirement-docs')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/requirement-docs') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Requirement Docs
+                </a>
+                <a
+                  href="/market-research"
+                  onClick={handleNav('/market-research')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/market-research') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Market Research
+                </a>
+                <a
+                  href="/eval-criteria"
+                  onClick={handleNav('/eval-criteria')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/eval-criteria') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  Eval Criteria
+                </a>
+                <a
+                  href="/sop-creation"
+                  onClick={handleNav('/sop-creation')}
+                  className={`block px-4 py-2 text-sm ${currentRoute.startsWith('/sop-creation') ? 'text-cyan-100 bg-cyan-500/10' : 'text-gray-200 hover:bg-gray-700/70'}`}
+                >
+                  SOP Creation
+                </a>
+              </div>
+            )}
+          </div>
         </nav>
       </div>
     </header>
