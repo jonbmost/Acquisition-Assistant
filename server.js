@@ -97,7 +97,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     timestamp: new Date().toISOString(),
-    service: 'acquisition-assistant',
+    service: 'acquisition-assistant-api',
     version: '1.0.0'
   });
 });
@@ -106,17 +106,27 @@ app.get('/health', (req, res) => {
   res.json({
     ok: true,
     timestamp: new Date().toISOString(),
-    service: 'acquisition-assistant',
+    service: 'acquisition-assistant-api',
     version: '1.0.0'
   });
 });
 
-// Serve static files from dist directory
-app.use(express.static(path.join(__dirname, 'dist')));
-
-// Fallback to index.html for client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// Root endpoint (helpful for debugging)
+app.get('/', (req, res) => {
+  res.json({
+    service: 'Acquisition Assistant API',
+    version: '1.0.0',
+    endpoints: [
+      'POST /api/chat',
+      'POST /api/mcp',
+      'POST /api/document-analysis',
+      'POST /api/url-query',
+      'POST /api/slide-ranger',
+      'GET /health',
+      'GET /api/health'
+    ],
+    status: 'running'
+  });
 });
 
 // Graceful shutdown handler

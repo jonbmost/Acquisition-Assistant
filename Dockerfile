@@ -1,22 +1,4 @@
-# Multi-stage build for optimized production image
-FROM node:24-slim AS builder
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install all dependencies (including dev dependencies for build)
-RUN npm ci --include=dev
-
-# Copy application source
-COPY . .
-
-# Build the Vite app
-RUN npm run build
-
-# Production stage
+# Backend API-only Dockerfile (no frontend build needed)
 FROM node:24-slim
 
 # Install dumb-init for proper signal handling
@@ -34,13 +16,11 @@ COPY package*.json ./
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy built app from builder stage
-COPY --from=builder /app/dist ./dist
-
-# Copy server and API files
+# Copy server and API files (backend only - no frontend)
 COPY server.js ./
 COPY api ./api
 COPY lib ./lib
+COPY knowledge-base ./knowledge-base
 
 # Change ownership to non-root user
 RUN chown -R nodejs:nodejs /app

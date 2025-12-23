@@ -1,6 +1,7 @@
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'https://rapidacq-frontend.vercel.app',
+  'https://rapidacq-frontend-4kht.vercel.app',
   'https://rapidacq-frontend-4kht-muput8sey-agile-acq.vercel.app'
 ];
 
