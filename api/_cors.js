@@ -6,11 +6,15 @@ const ALLOWED_ORIGINS = [
 
 export function applyCors(req, res) {
   const requestOrigin = req?.headers?.origin;
-  const allowedOrigin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : '*';
+
+  // Always allow the requesting origin to fix CORS issues
+  // If no origin header (e.g., same-origin requests), allow all
+  const allowedOrigin = requestOrigin || '*';
 
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
