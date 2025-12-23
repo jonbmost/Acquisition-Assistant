@@ -1,4 +1,6 @@
 // api/url-query.ts
+import { applyCors, handleOptions } from './_cors';
+
 export const runtime = 'nodejs';
 
 export const config = {
@@ -60,6 +62,10 @@ function extractAnswer(data: any): string {
 }
 
 export default async function handler(req: any, res: any) {
+  if (handleOptions(req, res)) return;
+
+  applyCors(req, res);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

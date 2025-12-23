@@ -2,6 +2,8 @@
 // This is a Vercel serverless function that handles MCP integration
 
 // Explicitly declare the supported runtime; node version is enforced via engines/project settings
+import { applyCors, handleOptions } from './_cors.js';
+
 export const runtime = 'nodejs';
 
 export const config = {
@@ -52,6 +54,10 @@ function sanitizeMessages(rawMessages) {
 
 export default async function handler(req, res) {
   // Only accept POST requests
+  if (handleOptions(req, res)) return;
+
+  applyCors(req, res);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

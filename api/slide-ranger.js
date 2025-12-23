@@ -1,3 +1,5 @@
+import { applyCors, handleOptions } from './_cors.js';
+
 export const runtime = 'nodejs';
 
 export const config = {
@@ -88,6 +90,10 @@ function parseSlides(rawText) {
 }
 
 export default async function handler(req, res) {
+  if (handleOptions(req, res)) return;
+
+  applyCors(req, res);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
