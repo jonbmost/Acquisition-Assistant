@@ -12,11 +12,13 @@
     "build:mcp": "tsc mcp-server.ts --outDir dist --module nodenext --moduleResolution nodenext --target es2022 --skipLibCheck",
     "mcp": "node dist/mcp-server.js",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "npm run build && gh-pages -d dist",
+    "start": "node server.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@modelcontextprotocol/sdk": "^1.24.3",
+    "express": "^4.18.2",
     "file-saver": "^2.0.5",
     "jspdf": "^3.0.4",
     "openai": "^6.10.0",
