@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+npm-debug.log
+
+# Build artifacts
+dist/
+*.tsbuildinfo
+
+# Development files
+.git/
+.github/
+.vscode/
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+!CLOUDRUN_DEPLOYMENT.md
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Misc
+.vercel/
